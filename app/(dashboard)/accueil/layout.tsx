@@ -1,4 +1,3 @@
-// import { FeaturedSidebarClient } from "@/components/page_layout/FeaturedSidebarClient";
 import type { ReactNode } from "react";
 
 export default function AccueilLayout({ children }: { children: ReactNode }) {

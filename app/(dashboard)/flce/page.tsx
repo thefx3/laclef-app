@@ -1,7 +1,11 @@
+import PageHeader from "@/components/layout/PageHeader";
+import PageShell from "@/components/layout/PageShell";
+
 export default function Flce(){
     return (
-        <div>
-            FLCE
-        </div>
+      <PageShell>
+        <PageHeader title="FLCE" />
+
+      </PageShell>
     )
 }

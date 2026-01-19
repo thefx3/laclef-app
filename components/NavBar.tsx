@@ -14,6 +14,12 @@ function getAppKeyFromPath(pathname: string | null): AppKey {
 
 export default function NavBar() {
   const pathname = usePathname();
+
+  const firstSeg = (pathname ?? "/").split("/")[1];
+  const isAppRoute = ["accueil", "flce", "musique", "activites"].includes(firstSeg);
+
+  if (!isAppRoute) return null;
+
   const appKey = getAppKeyFromPath(pathname);
   const links = APP_NAV[appKey];
 
