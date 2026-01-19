@@ -29,10 +29,10 @@ export default function LoginForm() {
       return;
     }
 
-    router.replace("/");
+    router.replace("/?login=success");
     router.refresh();
   }
-  
+
     return (
         <div className="min-h-screen grid place-items-center bg-gray-50 p-6">
         <form
