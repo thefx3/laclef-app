@@ -1,9 +1,32 @@
 import Link from "next/link";
 import { APPS } from "@/lib/apps";
+import { createClient } from "@/lib/supabase/server";
+import { logoutAction } from "@/components/header/LogOutAction";
+
+export async function LauncherHeader() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  return (
+    <div className="mb-6 flex items-center justify-between rounded-xl border bg-white px-4 py-3">
+      <div className="text-sm text-gray-700">
+        Connecté : <span className="font-medium">{user.email}</span>
+      </div>
+
+      <form action={logoutAction}>
+        <button className="rounded-md bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800">
+          Déconnexion
+        </button>
+      </form>
+    </div>
+  );
+}
 
 export default function Launcher() {
   return (
     <div className="dashboard-shell relative overflow-hidden px-6 py-10 font-sans">
+      <LauncherHeader />
       <div className="relative mx-auto w-full max-w-5xl">
         <div className="mb-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-700/80">
