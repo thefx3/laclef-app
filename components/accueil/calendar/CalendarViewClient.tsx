@@ -1,7 +1,7 @@
 "use client";
 
 import type { Post } from "@/lib/posts/types";
-import CalendarView from "@/components/accueil/CalendarView";
+import CalendarView from "@/components/accueil/calendar/CalendarView";
 
 type Props = {
   posts: Post[];

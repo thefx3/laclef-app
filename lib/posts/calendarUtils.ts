@@ -55,3 +55,18 @@ export function isSameDay(a: Date, b: Date) {
 export function sortByCreatedDesc<T extends { created_at: Date }>(items: T[]) {
   return [...items].sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 }
+
+export function formatRemainingDays(start: Date, end?: Date) {
+  const today = startOfDay(new Date());
+  const startDay = startOfDay(start);
+  const endDay = end ? startOfDay(end) : startDay;
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const remaining = Math.max(
+    0,
+    Math.floor((endDay.getTime() - today.getTime()) / msPerDay) + 1
+  );
+
+  if (remaining === 1) return "Dernier jour d'affichage";
+  return `${remaining} jours restants`;
+}

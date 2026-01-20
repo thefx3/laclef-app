@@ -1,6 +1,6 @@
 import PageShell from "@/components/layout/PageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import CalendarViewClient from "@/components/accueil/CalendarViewClient";
+import CalendarViewClient from "@/components/accueil/calendar/CalendarViewClient";
 import { fetchPostsServer } from "@/lib/posts/postsRepo.server";
 
 export default async function AccueilPage() {

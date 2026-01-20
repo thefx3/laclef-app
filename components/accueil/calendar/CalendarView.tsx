@@ -93,10 +93,10 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
     mode === "day"
       ? "grid-cols-1"
       : mode === "3days"
-      ? "grid-cols-1 sm:grid-cols-3"
+      ? "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]"
       : mode === "week"
-      ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-7"
-      : "grid-cols-2 sm:grid-cols-4 lg:grid-cols-6";
+      ? "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]"
+      : "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]";
 
   function formatLabelByMode(day: Date) {
     if (mode === "day" || mode === "3days") {
@@ -166,10 +166,10 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
           return (
             <div
               key={day.toISOString()}
-              className="border bg-white shadow-sm overflow-hidden transition-shadow hover:shadow-md"
+              className="min-w-[12rem] border bg-white shadow-sm overflow-hidden transition-shadow hover:shadow-md"
             >
               <div
-                className={`px-3 py-2 font-semibold cursor-pointer ${
+                className={`px-3 py-2 font-semibold cursor-pointer whitespace-nowrap ${
                   isSameDay(day, today)
                     ? "bg-[var(--accent)] text-[var(--surface)]"
                     : "bg-[var(--primary)] text-[var(--surface)]"

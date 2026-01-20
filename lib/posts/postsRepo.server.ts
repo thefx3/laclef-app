@@ -13,14 +13,6 @@ type PostRow = {
   updated_at: string;
 };
 
-function splitContent(content: string) {
-  const parts = content.split("\n\n");
-  const title = (parts[0] ?? "").trim();
-  const description =
-    parts.length > 1 ? parts.slice(1).join("\n\n").trim() : undefined;
-  return { title, description };
-}
-
 function rowToPost(row: PostRow): Post {
   return {
     id: row.id,
