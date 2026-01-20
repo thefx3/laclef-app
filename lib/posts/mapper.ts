@@ -13,23 +13,7 @@ export type PostRow = {
   author_id?: string | null;
 };
 
-export function splitContent(content: string) {
-  const parts = content.split("\n\n");
-  const title = (parts[0] ?? "").trim();
-  const description =
-    parts.length > 1 ? parts.slice(1).join("\n\n").trim() : undefined;
-  return { title, description };
-}
-
-export function composeContent(title: string, description?: string) {
-  const t = title.trim();
-  const d = description?.trim();
-  return d ? `${t}\n\n${d}` : t;
-}
-
 export function rowToPost(row: PostRow): Post {
-  const { title, description } = splitContent(row.content);
-
   return {
     id: row.id,
     content: row.content,

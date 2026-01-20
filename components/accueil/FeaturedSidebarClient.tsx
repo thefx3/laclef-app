@@ -1,70 +1,58 @@
+// components/accueil/FeaturedSidebarClient.tsx
 "use client";
 
 import { useMemo, useState } from "react";
 import type { Post } from "@/lib/posts/types";
-import { startOfDay } from "@/lib/posts/calendarUtils";
-
-
-import { FeaturedSidebar } from "./FeaturedSidebar";
-
+import { sortByCreatedDesc, formatRemainingDays } from "@/lib/posts/calendarUtils";
 import PostModal from "@/components/accueil/calendar/PostModal";
 
-import { usePosts } from "@/lib/usePosts";
-import { PostEditModal } from "@/components/accueil/posts/PostEditModal";
+type Props = {
+  posts: Post[];
+};
 
-export default function FeaturedSidebarClient() {
-  const { posts, loading, error, updatePost, deletePost } = usePosts();
+export function FeaturedSidebarClient({ posts }: Props) {
   const [selected, setSelected] = useState<Post | null>(null);
-  const [editing, setEditing] = useState<Post | null>(null);
 
-  const today = useMemo(() => startOfDay(new Date()), []);
-
-  const featured = useMemo(() => {
-    return posts.filter((post) => {
-      if (post.type !== "A_LA_UNE") return false;
-      const start = startOfDay(post.startAt);
-      const end = startOfDay(post.endAt ?? post.startAt);
-      return start <= today && end >= today;
-    });
-  }, [posts, today]);
+  const sorted = useMemo(() => sortByCreatedDesc(posts ?? []), [posts]);
 
   return (
-    <div className="w-64 shrink-0">
-      {loading && <p className="p-3 text-sm text-gray-500">Chargement...</p>}
-      {error && <p className="p-3 text-sm text-red-600">Erreur: {error}</p>}
+    <aside className="flex w-full flex-col rounded-sm border bg-white shadow-sm lg:w-64 h-[fit-content]">
+      <div className="bg-black py-4 text-center text-xl font-bold uppercase tracking-[0.25em] text-white">
+        A la une
+      </div>
 
-      <FeaturedSidebar posts={featured} onSelect={setSelected} />
+      <div className="flex flex-1 flex-col">
+        {sorted.length === 0 ? (
+          <p className="flex flex-1 items-center justify-center text-center text-sm text-gray-500 p-4">
+            Rien pour le moment
+          </p>
+        ) : (
+          <ul className="space-y-3 p-3">
+            {sorted.map((post) => (
+              <li
+                key={post.id}
+                className="cursor-pointer rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
+                onClick={() => setSelected(post)}
+              >
+                <div className="font-semibold text-gray-900 leading-snug line-clamp-2">
+                  {post.content || "Sans contenu"}
+                </div>
+
+                <div className="text-xs text-gray-600">
+                  {formatRemainingDays(post.startAt, post.endAt)}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {selected && (
         <PostModal
           post={selected}
           onClose={() => setSelected(null)}
-          onEdit={(post) => {
-            setEditing(post);
-            setSelected(null);
-          }}
-          onDelete={(post) => {
-            void deletePost(post);
-            setSelected(null);
-          }}
         />
       )}
-
-      {editing && (
-        <PostEditModal
-          key={editing.id}
-          post={editing}
-          onSave={(updated) => {
-            void updatePost(updated);
-            setEditing(null);
-          }}
-          onDelete={(post) => {
-            void deletePost(post);
-            setEditing(null);
-          }}
-          onCancel={() => setEditing(null)}
-        />
-      )}
-    </div>
+    </aside>
   );
 }

@@ -13,12 +13,12 @@ export default function PostModal({ post, onClose,}: { post: Post; onClose: () =
         </div>
 
         {post.content ? (
-          <p className="text-lg text-gray-700 whitespace-pre-wrap">
+          <p className="text-lg whitespace-pre-wrap">
             {post.content}
           </p>
         ) : null}
 
-        <div className="text-md text-gray-500 space-y-1">
+        <div className="text-md space-y-1 mt-3">
           <div>
             Posté par  : <span className="font-medium">{post.authorName}</span>
           </div>
