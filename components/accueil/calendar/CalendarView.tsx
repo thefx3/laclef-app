@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Post } from "@/lib/posts/types";
 import { getPostsForDay } from "@/lib/posts/getPostsForDay";
+import { deletePostApi, updatePostApi } from "@/lib/posts/postsApi.client";
 
 import {
   addDays,
@@ -20,6 +21,7 @@ import {
 import PostModal from "./PostModal";
 import DayModal from "./DayModal";
 import PostList from "./PostList";
+import PostEditModal from "./PostEditModal";
 
 type Mode = "day" | "3days" | "week" | "month";
 
@@ -31,18 +33,67 @@ const MODES = [
 ] as const;
 
 export default function CalendarView({ posts }: { posts: Post[] }) {
+  const [items, setItems] = useState<Post[]>(posts ?? []);
   const [mode, setMode] = useState<Mode>("day");
   const [cursor, setCursor] = useState<Date>(() => startOfDay(new Date()));
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [expandedDay, setExpandedDay] = useState<Date | null>(null);
+  const [editing, setEditing] = useState<Post | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const today = startOfDay(new Date());
 
+  useEffect(() => {
+    setItems(posts ?? []);
+  }, [posts]);
+
   // on enlève A_LA_UNE du calendrier
   const calendarPosts = useMemo(
-    () => (posts ?? []).filter((p) => p.type !== "A_LA_UNE"),
-    [posts]
+    () => (items ?? []).filter((p) => p.type !== "A_LA_UNE"),
+    [items]
   );
+
+  async function handleDelete(post: Post | null) {
+    if (!post) return;
+    const prev = items;
+    setItems((current) => current.filter((p) => p.id !== post.id));
+    setSelectedPost(null);
+    setExpandedDay(null);
+    setEditing(null);
+
+    try {
+      await deletePostApi(post.id);
+    } catch (e) {
+      setItems(prev);
+      alert((e as Error).message);
+    }
+  }
+
+  async function handleSave(
+    post: Post | null,
+    input: {
+      content: string;
+      type: Post["type"];
+      startAt: Date;
+      endAt?: Date;
+      authorName: string;
+      authorEmail?: string;
+    }
+  ) {
+    if (!post) return;
+    setSaving(true);
+    try {
+      const updated = await updatePostApi(post.id, input);
+      setItems((current) =>
+        current.map((p) => (p.id === updated.id ? updated : p))
+      );
+      setEditing(null);
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const { periodStart, periodEnd } = useMemo(() => {
     if (mode === "day") {
@@ -95,7 +146,7 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
       : mode === "3days"
       ? "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]"
       : mode === "week"
-      ? "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]"
+      ? "grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]"
       : "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]";
 
   function formatLabelByMode(day: Date) {
@@ -213,7 +264,25 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
 
       {/* Modal : détail post */}
       {selectedPost && (
-        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+        <PostModal
+          post={selectedPost}
+          onClose={() => setSelectedPost(null)}
+          onEdit={(post) => {
+            setEditing(post);
+            setSelectedPost(null);
+          }}
+          onDelete={(post) => void handleDelete(post)}
+        />
+      )}
+
+      {editing && (
+        <PostEditModal
+          post={editing}
+          saving={saving}
+          onCancel={() => setEditing(null)}
+          onDelete={() => void handleDelete(editing)}
+          onSave={(input) => void handleSave(editing, input)}
+        />
       )}
     </section>
   );

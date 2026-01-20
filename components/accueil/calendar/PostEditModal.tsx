@@ -48,7 +48,7 @@ export default function PostEditModal({ post, onCancel, onSave, onDelete, saving
 
   return (
     <Modal onClose={onCancel}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-[var(--surface)] p-4 sm:p-6">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-[var(--surface)] sm:p-2">
 
         <form
           className="grid grid-cols-1 gap-4 md:grid-cols-2"
@@ -136,7 +136,7 @@ export default function PostEditModal({ post, onCancel, onSave, onDelete, saving
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--muted-bg-hover)]"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--muted-bg-hover)] cursor-pointer disabled:opacity-60"
                 onClick={onCancel}
               >
                 Annuler

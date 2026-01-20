@@ -20,7 +20,7 @@ export default function PostModal({
       <div className="space-y-3 text-[var(--foreground)]">
         <div className="flex items-center justify-between gap-3">
           <PostPill type={post.type} />
-          <div className="flex items-center gap-3 mr-6">
+          <div className="flex items-center gap-2 mr-6">
             {onEdit ? (
               <button
                 className="btn-action btn-action--edit"
@@ -54,6 +54,13 @@ export default function PostModal({
             Posté par  : <span className="font-medium">{post.authorName}</span>
           </div>
           <div>
+            Créé le :{" "}
+            {post.created_at.toLocaleString("fr-FR", {
+              dateStyle: "short",
+              // timeStyle: "short",
+            })}
+          </div>
+          <div>
             Début :{" "}
             {post.startAt.toLocaleString("fr-FR", {
               dateStyle: "short",
@@ -68,6 +75,12 @@ export default function PostModal({
                   // timeStyle: "short",
                 })
               : "—"}
+          </div>
+          <div>
+            Modifié le : {post.updated_at.toLocaleString("fr-FR", {
+              dateStyle: "short",
+              // timeStyle: "short",
+            })} | {post.authorName}
           </div>
         </div>
       </div>
