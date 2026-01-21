@@ -2,10 +2,7 @@
 
 import type { Post } from "@/lib/posts/types";
 import Modal from "@/components/ui/Modal";
-import {
-  getPostTypeBadgeClass,
-  getPostTypeBorderClass,
-} from "@/lib/posts/postTypeStyles";
+import { getPostTypeBadgeClass, getPostTypeBorderClass } from "@/lib/posts/types";
 
 export default function DayModal({
   day,

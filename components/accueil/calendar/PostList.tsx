@@ -1,10 +1,7 @@
 "use client";
 
 import type { Post } from "@/lib/posts/types";
-import {
-  getPostTypeBadgeClass,
-  getPostTypeBorderClass,
-} from "@/lib/posts/postTypeStyles";
+import { getPostTypeBadgeClass, getPostTypeBorderClass } from "@/lib/posts/types";
 
 export default function PostList({
   posts,

@@ -1,16 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Post, PostType } from "@/lib/posts/types";
+import { POST_TYPE_LABELS, TYPE_OPTIONS, type Post, type PostType } from "@/lib/posts/types";
 import Modal from "@/components/ui/Modal"; // si tu l'as déjà; sinon tu me dis
-
-const TYPES: { value: PostType; label: string }[] = [
-  { value: "A_LA_UNE", label: "À la une" },
-  { value: "EVENT", label: "Évènement" },
-  { value: "ABSENCE", label: "Absence" },
-  { value: "RETARD", label: "Retard" },
-  { value: "REMPLACEMENT", label: "Remplacement" },
-];
 
 type Props = {
   post: Post;
@@ -75,9 +67,9 @@ export default function PostEditModal({ post, onCancel, onSave, onDelete, saving
               onChange={(e) => setType(e.target.value as PostType)}
               className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] shadow-sm focus:border-[var(--focus-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
             >
-              {TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+              {TYPE_OPTIONS.map((value) => (
+                <option key={value} value={value}>
+                  {POST_TYPE_LABELS[value]}
                 </option>
               ))}
             </select>

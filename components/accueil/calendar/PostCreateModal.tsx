@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
-import type { PostType } from "@/lib/posts/types";
+import { TYPE_OPTIONS, type PostType } from "@/lib/posts/types";
 import { fromDateInputValue, toDateInputValue } from "@/lib/posts/calendarUtils";
 import Modal from "@/components/ui/Modal";
 
@@ -24,7 +24,7 @@ function FormField({
   hint,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
   hint?: string;
 }) {
   return (
@@ -36,8 +36,6 @@ function FormField({
   );
 }
 
-
-const TYPE_OPTIONS: PostType[] = ["EVENT", "ABSENCE", "RETARD", "REMPLACEMENT"];
 
 export default function PostCreateModal({ onClose, onCreate, saving }: Props) {
   const [content, setContent] = useState("");

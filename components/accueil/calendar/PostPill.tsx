@@ -1,5 +1,5 @@
 import type { PostType } from "@/lib/posts/types";
-import { getPostTypeBadgeClass } from "@/lib/posts/postTypeStyles";
+import { getPostTypeBadgeClass } from "@/lib/posts/types";
 
 export default function PostPill({ type }: { type: PostType }) {
   return (
