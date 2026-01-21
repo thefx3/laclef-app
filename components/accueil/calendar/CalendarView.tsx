@@ -114,11 +114,22 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
 
   const days = useMemo(() => {
     const result: Date[] = [];
+    if (mode === "month") {
+      const monthStart = startOfMonth(cursor);
+      const gridStart = startOfWeekMonday(monthStart);
+      const monthEnd = endOfMonth(cursor);
+      const endWeekStart = startOfWeekMonday(monthEnd);
+      const gridEnd = addDays(endWeekStart, 6);
+      for (let d = gridStart; d <= gridEnd; d = addDays(d, 1)) {
+        result.push(d);
+      }
+      return result;
+    }
     for (let d = periodStart; d <= periodEnd; d = addDays(d, 1)) {
       result.push(d);
     }
     return result;
-  }, [periodStart, periodEnd]);
+  }, [periodStart, periodEnd, mode, cursor]);
 
   function goPrev() {
     if (mode === "day") setCursor((c) => addDays(c, -1));
@@ -147,7 +158,7 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
       ? "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]"
       : mode === "week"
       ? "grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]"
-      : "grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]";
+      : "grid-cols-7";
 
   function formatLabelByMode(day: Date) {
     if (mode === "day" || mode === "3days") {
@@ -171,6 +182,8 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
 
   const modeLabel = MODES.find((m) => m.key === mode)?.label ?? mode;
   const isDayMode = mode === "day";
+  const isMonthMode = mode === "month";
+  const monthStart = isMonthMode ? startOfMonth(cursor) : null;
 
   const arrowBase =
     "h-10 w-10 pb-2 flex items-center justify-center shrink-0 rounded-lg text-4xl leading-none hover:scale-95 transition-colors cursor-pointer";
@@ -191,70 +204,131 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
           </button>
         ))}
       </div>
-      <div className="p-4 shadow-sm backdrop-blur sm:p-6">
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
+
+      <div className="rounded-lg border-slate-50 shadow-xl">
+        
+        {/* FILTER HEADER */}
+        <div className="m-6 flex flex-wrap items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
+              <span className="text-[10px] font-semibold uppercase">
+                {today.toLocaleDateString("fr-FR", { month: "short" })}
+              </span>
+              <span className="text-base font-bold leading-none">{today.getDate()}</span>
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-semibold text-slate-900 mb-1">
+                {(() => {
+                  const label = periodStart.toLocaleDateString("fr-FR", {
+                    month: "long",
+                    year: "numeric",
+                  });
+                  return label.charAt(0).toUpperCase() + label.slice(1);
+                })()}
+              </div>
+              <div className="text-xs text-slate-500">{formatPeriodRecap()}</div>
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <button onClick={goPrev} className={arrowBase} aria-label="Période précédente">
               ←
             </button>
-            <div className="ml-2 rounded-full border border-slate-200/70 bg-slate-50/80 px-3 py-1 text-xs font-semibold text-slate-700">
-              {formatPeriodRecap()}
+            <div className="rounded-full border border-slate-200/70 bg-slate-50/80 px-3 py-1 text-xs font-semibold text-slate-700">
+              {modeLabel}
             </div>
             <button onClick={goNext} className={arrowBase} aria-label="Période suivante">
               →
             </button>
+          </div>
 
+          <button className="btn-action bg-black text-white hover:bg-slate-800">
+            Ajouter une publication
+          </button>
+        </div>
+
+        <div className="mt-6">
+          {isMonthMode ? (
+            <div className="border mt-5 grid grid-cols-7 rounded-md border-slate-200/30 text-sm font-semibold uppercase text-slate-800">
+              {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((label) => (
+                <div
+                  key={label}
+                  className="border-r border-t bg-slate-200/30 border-slate-200/80 px-3 py-2"
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          <div
+            className={`grid rounded-md ${gridCols}`}
+          >
+            {days.map((day) => {
+              const isOutsideMonth =
+                isMonthMode &&
+                monthStart &&
+                (day.getMonth() !== monthStart.getMonth() ||
+                  day.getFullYear() !== monthStart.getFullYear());
+              const dayPosts = sortByCreatedDesc(getPostsForDay(calendarPosts, day));
+              const postsToShow = isDayMode ? dayPosts : dayPosts.slice(0, 3);
+              const remaining = Math.max(0, dayPosts.length - postsToShow.length);
+
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`min-w-0 border-t border-l border-slate-200/80 p-3 sm:p-4 ${
+                    isSameDay(day, today) ? "bg-emerald-50/70" : ""
+                  }`}
+                >
+                  <div
+                    className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700 cursor-pointer"
+                    onClick={() => {
+                      setMode("day");
+                      setCursor(startOfDay(day));
+                      setExpandedDay(null);
+                    }}
+                  >
+                    {isMonthMode ? (
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                          isOutsideMonth
+                            ? "border-slate-200 text-slate-400"
+                            : "border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        {day.getDate()}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="truncate">{formatLabelByMode(day)}</span>
+                        <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-600">
+                          {day.getDate()}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-2 text-sm text-[var(--muted)]">
+                    {dayPosts.length === 0 ? (
+                      <div className="text-[var(--muted-subtle)]">Aucune publication</div>
+                    ) : (
+                      <PostList
+                        posts={postsToShow}
+                        remaining={isDayMode ? 0 : remaining}
+                        onSelectPost={setSelectedPost}
+                        onShowMore={() => setExpandedDay(day)}
+                        showMeta={isSameDay(day, today)}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-
-        <div
-          className={`mt-5 grid gap-px rounded-2xl border border-slate-200/80 bg-slate-200/80 ${gridCols}`}
-        >
-          {days.map((day) => {
-            const dayPosts = sortByCreatedDesc(getPostsForDay(calendarPosts, day));
-            const postsToShow = isDayMode ? dayPosts : dayPosts.slice(0, 3);
-            const remaining = Math.max(0, dayPosts.length - postsToShow.length);
-
-            return (
-              <div
-                key={day.toISOString()}
-                className={`min-w-0 bg-white/90 p-3 sm:p-4 ${
-                  isSameDay(day, today) ? "bg-emerald-50/70" : ""
-                }`}
-              >
-                <div
-                  className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700 cursor-pointer"
-                  onClick={() => {
-                    setMode("day");
-                    setCursor(startOfDay(day));
-                    setExpandedDay(null);
-                  }}
-                >
-                  <span className="truncate">{formatLabelByMode(day)}</span>
-                  <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-600">
-                    {day.getDate()}
-                  </span>
-                </div>
-
-                <div className="mt-2 text-sm text-[var(--muted)]">
-                  {dayPosts.length === 0 ? (
-                    <div className="text-[var(--muted-subtle)]">Aucune publication</div>
-                  ) : (
-                    <PostList
-                      posts={postsToShow}
-                      remaining={isDayMode ? 0 : remaining}
-                      onSelectPost={setSelectedPost}
-                      onShowMore={() => setExpandedDay(day)}
-                      showMeta={isSameDay(day, today)}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
         </div>
-      </div>
 
       {/* Modal : tous les posts d'un jour */}
       {expandedDay && (
