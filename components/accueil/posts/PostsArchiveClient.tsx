@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Post } from "@/lib/posts/types";
 import PostsFiltersBar from "./PostsFiltersBar";
 import PostsList from "./PostsListClient";
@@ -28,6 +28,8 @@ export default function PostsArchiveClient({
   const [selected, setSelected] = useState<Post | null>(null);
   const [editing, setEditing] = useState<Post | null>(null);
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
 
   const [filters, setFilters] = useState<FilterState>({
     scope: "ALL",
@@ -47,6 +49,18 @@ export default function PostsArchiveClient({
       userEmail,
     });
   }, [items, filters, userId, userEmail]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageEnd = pageStart + pageSize;
+  const pagedPosts = filtered.slice(pageStart, pageEnd);
+
+  useEffect(() => {
+    if (page !== currentPage) {
+      setPage(currentPage);
+    }
+  }, [page, currentPage]);
 
   async function handleDelete(post: Post) {
     const prev = items;
@@ -91,14 +105,46 @@ export default function PostsArchiveClient({
         <PostsFiltersBar
           state={filters}
           authors={authors}
-          onChange={(next: FilterState) => setFilters(next)}
+          onChange={(next: FilterState) => {
+            setFilters(next);
+            setPage(1);
+          }}
         />
         <div className="mt-3 text-xs text-slate-500">
           {filtered.length} résultat{filtered.length > 1 ? "s" : ""}.
         </div>
       </div>
 
-      <PostsList posts={filtered} onSelect={setSelected} />
+      <PostsList posts={pagedPosts} onSelect={setSelected} />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+        <div>
+          Page {currentPage} / {totalPages}
+          {filtered.length > 0 ? (
+            <span className="ml-2 text-xs text-slate-500">
+              ({pageStart + 1}-{Math.min(pageEnd, filtered.length)} sur {filtered.length})
+            </span>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+          >
+            Précédent
+          </button>
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
 
       {selected && (
         <PostModal
