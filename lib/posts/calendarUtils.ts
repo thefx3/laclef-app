@@ -70,3 +70,19 @@ export function formatRemainingDays(start: Date, end?: Date) {
   if (remaining === 1) return "Dernier jour d'affichage";
   return `${remaining} jours restants`;
 }
+
+// YYYY-MM-DD (input type="date") depuis une Date locale
+export function toDateInputValue(d: Date) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// Date locale à partir de YYYY-MM-DD (input type="date")
+export function fromDateInputValue(value: string) {
+  // Important: new Date("YYYY-MM-DD") est interprété en UTC => décalage possible.
+  // On reconstruit donc en local.
+  const [y, m, d] = value.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}

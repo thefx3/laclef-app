@@ -73,3 +73,60 @@ export async function deletePostApi(id: string) {
     throw new Error(err.error ?? "Delete failed");
   }
 }
+
+export type CreatePostInput = {
+  content: string;
+  type: PostType;
+  startAt: Date;
+  endAt?: Date;
+  authorName?: string;
+  authorEmail?: string;
+};
+
+export async function createPostApi(input: CreatePostInput): Promise<Post> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error("Not authenticated");
+
+  if (input.endAt && input.endAt < input.startAt) {
+    throw new Error("endAt must be >= startAt");
+  }
+
+  const payload = {
+    content: input.content,
+    type: input.type,
+    startAt: input.startAt.toISOString(),
+    endAt: input.endAt ? input.endAt.toISOString() : null,
+    authorName: input.authorName,
+    authorEmail: input.authorEmail ?? null,
+  };
+
+  const res = await fetch("/api/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+    if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? "Erreur création de poste");
+  }
+
+  const json = (await res.json()) as { post: any };
+
+  const row = json.post;
+  const post: Post = {
+    id: row.id,
+    content: row.content,
+    type: row.type,
+    startAt: new Date(row.start_at),
+    endAt: row.end_at ? new Date(row.end_at) : undefined,
+    authorName: row.author_name,
+    authorEmail: row.author_email ?? undefined,
+    created_at: new Date(row.created_at),
+    updated_at: new Date(row.updated_at),
+    author_id: row.author_id ?? undefined,
+  };
+
+  return post;
+}

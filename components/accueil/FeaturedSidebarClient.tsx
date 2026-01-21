@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Post } from "@/lib/posts/types";
 import { startOfDay, formatRemainingDays } from "@/lib/posts/calendarUtils";
 import PostModal from "@/components/accueil/calendar/PostModal";
@@ -9,6 +9,11 @@ import { deletePostApi, updatePostApi } from "@/lib/posts/postsApi.client";
 
 export default function FeaturedSidebarClient({ initialPosts }: { initialPosts: Post[] }) {
   const [items, setItems] = useState<Post[]>(initialPosts);
+
+  useEffect(() => {
+    setItems(initialPosts);
+  }, [initialPosts]);
+
   const [selected, setSelected] = useState<Post | null>(null);
   const [editing, setEditing] = useState<Post | null>(null);
   const [saving, setSaving] = useState(false);

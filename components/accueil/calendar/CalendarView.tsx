@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Post } from "@/lib/posts/types";
 import { getPostsForDay } from "@/lib/posts/getPostsForDay";
-import { deletePostApi, updatePostApi } from "@/lib/posts/postsApi.client";
+import { deletePostApi, updatePostApi, createPostApi } from "@/lib/posts/postsApi.client";
+import PostCreateModal from "./PostCreateModal";
 
 import {
   addDays,
@@ -22,6 +23,7 @@ import PostModal from "./PostModal";
 import DayModal from "./DayModal";
 import PostList from "./PostList";
 import PostEditModal from "./PostEditModal";
+import { useRouter } from "next/navigation";
 
 type Mode = "day" | "3days" | "week" | "month";
 
@@ -39,11 +41,14 @@ const MODES_SECTION = [
 ]
 
 export default function CalendarView({ posts }: { posts: Post[] }) {
+  const router = useRouter();
+
   const [items, setItems] = useState<Post[]>(posts ?? []);
   const [mode, setMode] = useState<Mode>("day");
   const [cursor, setCursor] = useState<Date>(() => startOfDay(new Date()));
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [expandedDay, setExpandedDay] = useState<Date | null>(null);
+  const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Post | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -271,8 +276,11 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
             </button>
           </div>
 
-          <button className="btn-action bg-black text-white hover:bg-slate-800">
-            Ajouter une publication
+          <button
+            className="btn-action bg-black text-white hover:bg-slate-800"
+            onClick={() => setCreating(true)}
+          >
+            Publier une annonce
           </button>
         </div>
 
@@ -389,6 +397,35 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
           onSave={(input) => void handleSave(editing, input)}
         />
       )}
+
+      {creating && (
+        <PostCreateModal
+        saving={saving}
+        onClose={() => setCreating(false)}
+        onCreate={async (input) => {
+          setSaving(true);
+          try {
+            const created = await createPostApi(input);
+            // On ajoute en local (UX immédiate), et on garde le tri via created_at
+            setItems((current) => [created, ...current]);
+            
+            setCreating(false);
+            router.refresh();
+
+            const createdDay = startOfDay(created.startAt);
+            if (createdDay < periodStart || createdDay > periodEnd) {
+              setCursor(createdDay);
+              setMode("day");
+            } 
+          } catch (e) {
+          alert((e as Error).message);
+          } finally {
+            setSaving(false);
+          }
+        }}
+        />
+      )}
+
     </section>
   );
 }

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createClient } from "@/lib/supabase/server";
+import { PostType } from "@/lib/posts/types";
+import { rowToPost } from "@/lib/posts/mapper";
 
 export async function PATCH(
   req: Request,
