@@ -32,6 +32,12 @@ const MODES = [
   { key: "month", label: "1 mois" },
 ] as const;
 
+const MODES_SECTION = [
+  { key: "activites", label : "Activités" },
+  { key: "production", label : "Production" },
+  { key: "actualites", label : "Actualités" },
+]
+
 export default function CalendarView({ posts }: { posts: Post[] }) {
   const [items, setItems] = useState<Post[]>(posts ?? []);
   const [mode, setMode] = useState<Mode>("day");
@@ -191,11 +197,29 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
 
   const arrowBase =
     "h-10 w-10 pb-2 flex items-center justify-center shrink-0 rounded-lg text-4xl leading-none hover:scale-95 transition-colors cursor-pointer";
+  const tabsWrapperClass =
+    "mb-4 w-fit rounded-md bg-[var(--grey)] p-1 inset-shadow-md";
+  const calendarShellClass =
+    "rounded-xl shadow-[0_8px_30px_-12px_rgba(15,23,42,0.35)]";
+  const headerWrapClass =
+    "rounded-xl m-6 flex flex-wrap items-center justify-between";
+  const calendarBadgeClass =
+    "flex h-12 w-12 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm";
+  const modePillClass =
+    "rounded-full border border-slate-200/70 bg-slate-50/80 px-3 py-1 text-xs font-semibold text-slate-700";
+  const weekdayHeaderClass =
+    "grid grid-cols-7 border border-slate-200/80 bg-white/90 text-sm font-semibold uppercase text-slate-800";
+  const weekdayCellClass =
+    "border-r border-slate-200/80 bg-slate-100/70 px-3 py-2 calendar-weekday";
+  const gridWrapClass = `grid border border-slate-200/80 bg-white/90 ${gridCols}`;
+  const dayCellBaseClass = "min-w-0 border-l border-slate-200/80 flex flex-col border-b";
+  const dayHeaderBaseClass =
+    "flex items-start text-[11px] font-semibold text-slate-700 cursor-pointer";
 
   return (
     <section className="w-full" suppressHydrationWarning>
       {/* TABS FILTERS */}
-      <div className="mb-4 w-fit rounded-md bg-[var(--grey)] p-1 inset-shadow-md">
+      <div className={tabsWrapperClass}>
         {MODES.map((m) => (
           <button
             key={m.key}
@@ -210,12 +234,12 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
       </div>
 
 
-      <div className="rounded-xl shadow-[0_8px_30px_-12px_rgba(15,23,42,0.35)]">
+      <div className={calendarShellClass}>
         
         {/* FILTER HEADER */}
-        <div className="rounded-xl m-6 flex flex-wrap items-center justify-between">
-          <div className="flex items-center gap-3 mt-6">
-            <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
+        <div className={`${headerWrapClass} pt-6`}>
+          <div className="flex items-center gap-3">
+            <div className={calendarBadgeClass}>
               <span className="text-[10px] font-semibold uppercase">
                 {today.toLocaleDateString("fr-FR", { month: "short" })}
               </span>
@@ -239,7 +263,7 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
             <button onClick={goPrev} className={arrowBase} aria-label="Période précédente">
               ←
             </button>
-            <div className="rounded-full border border-slate-200/70 bg-slate-50/80 px-3 py-1 text-xs font-semibold text-slate-700">
+            <div className={modePillClass}>
               {modeLabel}
             </div>
             <button onClick={goNext} className={arrowBase} aria-label="Période suivante">
@@ -254,11 +278,11 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
 
         <div className="mt-6 rounded-b-xl overflow-hidden">
           {isMonthMode ? (
-            <div className="grid grid-cols-7 border border-slate-200/80 bg-white/90 text-sm font-semibold uppercase text-slate-800">
+            <div className={weekdayHeaderClass}>
               {weekdayLabels.map((label, index) => (
                 <div
                   key={`${label}-${index}`}
-                  className="border-r border-slate-200/80 bg-slate-100/70 px-3 py-2 calendar-weekday"
+                  className={weekdayCellClass}
                 >
                   {label}
                 </div>
@@ -266,7 +290,7 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
             </div>
           ) : null}
 
-          <div className={`grid border border-slate-200/80 bg-white/90 ${gridCols}`}>
+          <div className={gridWrapClass}>
             {days.map((day) => {
               const isOutsideMonth =
                 isMonthMode &&
@@ -280,12 +304,12 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
               return (
                 <div
                   key={day.toISOString()}
-                  className={`min-w-0 border-l border-slate-200/80 flex flex-col border-b ${
+                  className={`${dayCellBaseClass} ${
                     isSameDay(day, today) ? "bg-emerald-100/70" : ""
                   }`}
                 >
                   <div
-                    className={`flex items-start text-[11px] font-semibold text-slate-700 cursor-pointer ${
+                    className={`${dayHeaderBaseClass} ${
                       isMonthMode
                         ? "border-slate-200/50 px-2 py-1 bg-transparent"
                         : "border-b border-slate-200 bg-slate-100/70 px-4 py-2"

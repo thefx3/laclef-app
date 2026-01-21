@@ -65,7 +65,7 @@ export default function FeaturedSidebarClient({ initialPosts }: { initialPosts: 
 
   return (
     <div className="w-full h-100vh">
-      <aside className="flex w-full flex-col backdrop-blur lg:w-64 h-[fit-content]">
+      <aside className="flex w-full flex-col backdrop-blur lg:w-64 h-[fit-content] pt-8">
         <div className="p-4">
           <div className="text-lg font-semibold uppercase tracking-[0.2em] text-slate-400">
             A la une
