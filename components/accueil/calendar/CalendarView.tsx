@@ -177,79 +177,83 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
 
   return (
     <section className="w-full" suppressHydrationWarning>
-      {/* Choix du mode */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {MODES.map((m) => (
-          <button
-            key={m.key}
-            className={`btn-filter ${
-              mode === m.key ? "btn-filter--active" : "btn-filter--inactive"
-            }`}
-            onClick={() => setModeAndReset(m.key)}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      <div className="p-4 shadow-sm backdrop-blur sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button onClick={goPrev} className={arrowBase} aria-label="Période précédente">
+              ←
+            </button>
+            <div className="ml-2 rounded-full border border-slate-200/70 bg-slate-50/80 px-3 py-1 text-xs font-semibold text-slate-700">
+              {formatPeriodRecap()}
+            </div>
+            <button onClick={goNext} className={arrowBase} aria-label="Période suivante">
+              →
+            </button>
 
-      {/* Récap + flèches */}
-      <div className="flex items-center justify-between gap-3 w-full">
-        <button onClick={goPrev} className={arrowBase} aria-label="Période précédente">
-          ←
-        </button>
-
-        <div className="text-sm font-semibold text-[var(--foreground)]">
-          {modeLabel} : {formatPeriodRecap()}
+          </div>
+          <div className="text-sm font-semibold text-slate-800">{modeLabel}</div>
         </div>
 
-        <button onClick={goNext} className={arrowBase} aria-label="Période suivante">
-          →
-        </button>
-      </div>
-
-      {/* Grille */}
-      <div className={`mt-4 grid ${gridCols}`}>
-        {days.map((day) => {
-          const dayPosts = sortByCreatedDesc(getPostsForDay(calendarPosts, day));
-          const postsToShow = isDayMode ? dayPosts : dayPosts.slice(0, 3);
-          const remaining = Math.max(0, dayPosts.length - postsToShow.length);
-
-          return (
-            <div
-              key={day.toISOString()}
-              className="min-w-[12rem] border bg-white shadow-sm overflow-hidden transition-shadow hover:shadow-md"
+        <div className="mt-4 flex flex-wrap gap-2">
+          {MODES.map((m) => (
+            <button
+              key={m.key}
+              className={`btn-filter ${
+                mode === m.key ? "btn-filter--active" : "btn-filter--inactive"
+              }`}
+              onClick={() => setModeAndReset(m.key)}
             >
-              <div
-                className={`px-3 py-2 font-semibold cursor-pointer whitespace-nowrap ${
-                  isSameDay(day, today)
-                    ? "bg-[var(--accent)] text-[var(--surface)]"
-                    : "bg-[var(--primary)] text-[var(--surface)]"
-                }`}
-                onClick={() => {
-                  setMode("day");
-                  setCursor(startOfDay(day));
-                  setExpandedDay(null);
-                }}
-              >
-                {formatLabelByMode(day)}
-              </div>
+              {m.label}
+            </button>
+          ))}
+        </div>
 
-              <div className="p-2 text-sm text-gray-600">
-                {dayPosts.length === 0 ? (
-                  <div className="text-gray-400">Aucune publication</div>
-                ) : (
-                  <PostList
-                    posts={postsToShow}
-                    remaining={isDayMode ? 0 : remaining}
-                    onSelectPost={setSelectedPost}
-                    onShowMore={() => setExpandedDay(day)}
-                    showMeta={isSameDay(day, today)}
-                  />
-                )}
+        <div
+          className={`mt-5 grid gap-px rounded-2xl border border-slate-200/80 bg-slate-200/80 ${gridCols}`}
+        >
+          {days.map((day) => {
+            const dayPosts = sortByCreatedDesc(getPostsForDay(calendarPosts, day));
+            const postsToShow = isDayMode ? dayPosts : dayPosts.slice(0, 3);
+            const remaining = Math.max(0, dayPosts.length - postsToShow.length);
+
+            return (
+              <div
+                key={day.toISOString()}
+                className={`min-w-0 bg-white/90 p-3 sm:p-4 ${
+                  isSameDay(day, today) ? "bg-emerald-50/70" : ""
+                }`}
+              >
+                <div
+                  className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700 cursor-pointer"
+                  onClick={() => {
+                    setMode("day");
+                    setCursor(startOfDay(day));
+                    setExpandedDay(null);
+                  }}
+                >
+                  <span className="truncate">{formatLabelByMode(day)}</span>
+                  <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-600">
+                    {day.getDate()}
+                  </span>
+                </div>
+
+                <div className="mt-2 text-sm text-[var(--muted)]">
+                  {dayPosts.length === 0 ? (
+                    <div className="text-[var(--muted-subtle)]">Aucune publication</div>
+                  ) : (
+                    <PostList
+                      posts={postsToShow}
+                      remaining={isDayMode ? 0 : remaining}
+                      onSelectPost={setSelectedPost}
+                      onShowMore={() => setExpandedDay(day)}
+                      showMeta={isSameDay(day, today)}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Modal : tous les posts d'un jour */}

@@ -21,7 +21,7 @@ export default function DayModal({
   return (
     <Modal onClose={onClose}>
       <div className="flex items-center justify-between mb-3">
-        <div className="font-semibold text-gray-900">
+        <div className="font-semibold text-[var(--foreground)]">
           Évènements du{" "}
           {day.toLocaleDateString("fr-FR", {
             weekday: "long",
@@ -34,7 +34,7 @@ export default function DayModal({
         {posts.map((post) => (
           <div
             key={post.id}
-            className={`cursor-pointer rounded border border-l-4 bg-gray-50 px-3 py-2 hover:bg-gray-100 ${getPostTypeBorderClass(
+            className={`cursor-pointer rounded-xl border border-l-4 border-white/70 bg-white/70 px-3 py-2 shadow-sm hover:bg-white/90 ${getPostTypeBorderClass(
               post.type
             )}`}
             onClick={() => {
@@ -52,7 +52,7 @@ export default function DayModal({
                 {post.type}
               </span>
             </div>
-            <div className="font-medium text-gray-900 line-clamp-1">
+            <div className="font-medium text-[var(--foreground)] line-clamp-1">
               {post.content || "Sans contenu"}
             </div>
           </div>

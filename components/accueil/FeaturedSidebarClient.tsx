@@ -64,10 +64,12 @@ export default function FeaturedSidebarClient({ initialPosts }: { initialPosts: 
   }
 
   return (
-    <div className="w-full">
-      <aside className="flex w-full flex-col rounded-sm border border-[var(--border)] bg-[var(--surface)] shadow-sm lg:w-64 h-[fit-content]">
-        <div className="bg-[var(--primary)] py-4 text-center text-xl font-bold uppercase tracking-[0.25em] text-[var(--surface)]">
-          A la une
+    <div className="w-full h-100vh">
+      <aside className="flex w-full flex-col backdrop-blur lg:w-64 h-[fit-content]">
+        <div className="p-4">
+          <div className="text-lg font-semibold uppercase tracking-[0.2em] text-slate-400">
+            A la une
+          </div>
         </div>
 
         <div className="flex flex-1 flex-col">
@@ -76,11 +78,11 @@ export default function FeaturedSidebarClient({ initialPosts }: { initialPosts: 
               Rien pour le moment
             </p>
           ) : (
-            <ul className="space-y-3 p-3">
+            <ul className="space-y-2 p-3">
               {featured.map((post) => (
                 <li
                   key={post.id}
-                  className="cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--muted-bg)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted-bg-hover)]"
+                  className="cursor-pointer rounded-md border border-slate-200/70 bg-slate-50/80 px-3 py-2 text-sm shadow-sm transition-colors hover:bg-white"
                   onClick={() => setSelected(post)}
                 >
                   <div className="font-semibold text-[var(--foreground)] leading-snug line-clamp-2">

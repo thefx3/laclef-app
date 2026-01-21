@@ -20,7 +20,7 @@ export default function PostList({
   showMeta?: boolean;
 }) {
   if (posts.length === 0) {
-    return <p className="text-sm text-gray-500">Aucun évènement.</p>;
+    return <p className="text-sm text-[var(--muted-subtle)]">Aucun évènement.</p>;
   }
 
   return (
@@ -28,13 +28,13 @@ export default function PostList({
       {posts.map((p) => (
         <li
           key={p.id}
-          className={`cursor-pointer rounded border border-l-4 bg-gray-50 px-2 py-1 transition-colors hover:bg-gray-100 ${getPostTypeBorderClass(
+          className={`cursor-pointer rounded-lg border border-l-4 border-slate-200/70 bg-slate-50/90 px-2.5 py-1.5 text-xs shadow-sm transition-colors hover:bg-white ${getPostTypeBorderClass(
             p.type
           )}`}
           onClick={() => onSelectPost(p)}
           role="button"
         >
-          <div className="mb-1">
+          <div className="mb-1 flex items-center justify-between gap-2">
             <span
               className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${getPostTypeBadgeClass(
                 p.type
@@ -43,11 +43,11 @@ export default function PostList({
               {p.type}
             </span>
           </div>
-          <div className="font-medium text-gray-900 line-clamp-1">
+          <div className="font-medium text-[var(--foreground)] line-clamp-2">
             {p.content || "Sans contenu"}
           </div>
           {showMeta ? (
-            <div className="text-[11px] text-gray-500">
+            <div className="text-[10px] text-[var(--muted-subtle)]">
               {p.created_at.toLocaleTimeString("fr-FR", {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -62,7 +62,7 @@ export default function PostList({
           <button
             type="button"
             onClick={onShowMore}
-            className="w-full rounded-lg border border-dashed p-2 text-xs text-gray-600 hover:bg-gray-50"
+            className="w-full rounded-lg border border-dashed border-slate-200/70 bg-slate-50/80 p-2 text-[10px] font-semibold text-slate-500 hover:bg-white"
           >
             +{remaining} autres
           </button>

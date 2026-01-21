@@ -9,10 +9,10 @@ type HeaderProps = {
 
 export default function Header({ email, role }: HeaderProps) {
     const iconClass =
-    "h-9 w-9 rounded-lg border border-white/70 bg-white/70 p-2 text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white hover:text-slate-900";
+    "h-9 w-9 rounded-lg border border-white/70 bg-white/70 p-2 text-slate-700 shadow-sm  transition hover:-translate-y-0.5 hover:bg-white hover:text-slate-900";
 
     return (
-        <header className="w-full flex justify-between p-4 shadow-sm backdrop-blur">
+        <header className="w-full flex justify-between p-4 shadow-sm bg-white">
         {/* Gauche */}
         <div>
 

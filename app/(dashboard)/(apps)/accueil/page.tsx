@@ -8,7 +8,7 @@ export default async function AccueilPage() {
 
   return (
     <PageShell>
-      <PageHeader title="Calendrier des évènements" />
+      <PageHeader title="Calendrier" />
       <CalendarViewClient posts={posts} />
     </PageShell>
   );

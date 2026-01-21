@@ -162,12 +162,12 @@ body {
     cursor: pointer;
   }
 
-  .dashboard-shell {
+  /* .dashboard-shell {
     background:
       radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 55%),
       radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.14), transparent 45%),
       linear-gradient(135deg, #f8fafc 0%, #ffffff 55%, #f1f5f9 100%);
-  }
+  } */
 
   .card-fade {
     opacity: 0;

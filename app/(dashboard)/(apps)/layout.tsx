@@ -16,14 +16,14 @@ export default async function AppsLayout({ children }: { children: React.ReactNo
   const role = profile?.role ?? "USER";
 
   return (
-    <div className="dashboard-shell min-h-screen">
+    <div className="min-h-screen">
       <div className="flex flex-col lg:flex-row min-h-screen">
         <NavBar />
         <main className="flex flex-col w-full min-h-screen min-w-0">
           <div className="mx-auto w-full">
             <Header email={user!.email ?? "-"} role={role} />
           </div>
-          <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 pb-10 sm:px-6">
+          <div className="mx-auto w-full flex-1">
             {children}
           </div>
         </main>

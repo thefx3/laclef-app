@@ -17,7 +17,7 @@ export default function PostModal({
 }) {
   return (
     <Modal onClose={onClose}>
-      <div className="space-y-3 text-[var(--foreground)]">
+      <div className="space-y-4 text-[var(--foreground)]">
         <div className="flex items-center justify-between gap-3">
           <PostPill type={post.type} />
           <div className="flex items-center gap-2 mr-6">
@@ -44,12 +44,12 @@ export default function PostModal({
         </div>
 
         {post.content ? (
-          <p className="text-lg whitespace-pre-wrap text-[var(--foreground)]">
+          <p className="text-base leading-relaxed whitespace-pre-wrap text-[var(--foreground)]">
             {post.content}
           </p>
         ) : null}
 
-        <div className="text-md space-y-1 mt-3 text-[var(--muted)]">
+        <div className="rounded-xl border border-white/70 bg-white/70 p-3 text-sm text-[var(--muted)]">
           <div>
             Posté par  : <span className="font-medium">{post.authorName}</span>
           </div>

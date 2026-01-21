@@ -48,7 +48,7 @@ export default function PostEditModal({ post, onCancel, onSave, onDelete, saving
 
   return (
     <Modal onClose={onCancel}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-[var(--surface)] sm:p-2">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
         <form
           className="grid grid-cols-1 gap-4 md:grid-cols-2"
@@ -66,7 +66,7 @@ export default function PostEditModal({ post, onCancel, onSave, onDelete, saving
           }}
         >
          <div className="flex flex-col gap-2 w-full">
-            <label className="text-md font-medium text-[var(--foreground)]" htmlFor="edit-type">
+            <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="edit-type">
               Type d&apos;évènement
             </label>
             <select
