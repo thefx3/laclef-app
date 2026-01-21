@@ -21,11 +21,16 @@ const SECONDARY: { key: SecondaryFilter; label: string }[] = [
 ];
 
 export default function PostsFiltersBar({ state, authors, onChange }: Props) {
+  const sectionLabelClass = "text-sm font-semibold text-slate-700";
+  const fieldLabelClass = "text-xs font-semibold text-slate-600";
+  const inputClass = "mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm";
+  const filterButtonClass = (active: boolean) =>
+    `btn-filter ${active ? "btn-filter--active" : "btn-filter--inactive"}`;
   const scopeBtn = (label: string, value: PrimaryScope) => (
     <button
       type="button"
       onClick={() => onChange({ ...state, scope: value })}
-      className={`btn-filter ${state.scope === value ? "btn-filter--active" : "btn-filter--inactive"}`}
+      className={filterButtonClass(state.scope === value)}
     >
       {label}
     </button>
@@ -35,20 +40,20 @@ export default function PostsFiltersBar({ state, authors, onChange }: Props) {
     <div className="space-y-3">
       {/* Scope */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold text-slate-700">Affichage :</span>
+        <span className={sectionLabelClass}>Affichage :</span>
         {scopeBtn("Tous les postes", "ALL")}
         {scopeBtn("Mes postes", "MINE")}
       </div>
 
       {/* Secondary */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold text-slate-700">Période :</span>
+        <span className={sectionLabelClass}>Période :</span>
         {SECONDARY.map((f) => (
           <button
             key={f.key}
             type="button"
             onClick={() => onChange({ ...state, secondary: f.key })}
-            className={`btn-filter ${state.secondary === f.key ? "btn-filter--active" : "btn-filter--inactive"}`}
+            className={filterButtonClass(state.secondary === f.key)}
           >
             {f.label}
           </button>
@@ -57,7 +62,7 @@ export default function PostsFiltersBar({ state, authors, onChange }: Props) {
         {state.secondary === "ON_DATE" && (
           <input
             type="date"
-            className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
             onChange={(e) => {
               const v = e.target.value;
               onChange({
@@ -73,9 +78,9 @@ export default function PostsFiltersBar({ state, authors, onChange }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Type */}
         <div>
-          <label className="text-xs font-semibold text-slate-600">Type</label>
+          <label className={fieldLabelClass}>Type</label>
           <select
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+            className={inputClass}
             value={state.type ?? "ALL"}
             onChange={(e) => onChange({ ...state, type: e.target.value as PostType | "ALL" })}
           >
@@ -90,9 +95,9 @@ export default function PostsFiltersBar({ state, authors, onChange }: Props) {
 
         {/* Author */}
         <div>
-          <label className="text-xs font-semibold text-slate-600">Auteur</label>
+          <label className={fieldLabelClass}>Auteur</label>
           <select
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-60"
+            className={`${inputClass} disabled:opacity-60`}
             value={state.author ?? "ALL"}
             disabled={state.scope === "MINE"}
             onChange={(e) => onChange({ ...state, author: e.target.value })}
@@ -111,9 +116,9 @@ export default function PostsFiltersBar({ state, authors, onChange }: Props) {
 
         {/* Search */}
         <div>
-          <label className="text-xs font-semibold text-slate-600">Recherche</label>
+          <label className={fieldLabelClass}>Recherche</label>
           <input
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+            className={inputClass}
             placeholder="Contenu, auteur, type…"
             value={state.search ?? ""}
             onChange={(e) => onChange({ ...state, search: e.target.value })}

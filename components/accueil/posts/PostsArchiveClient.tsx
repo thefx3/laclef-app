@@ -30,6 +30,9 @@ export default function PostsArchiveClient({
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 12;
+  const panelClass = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm";
+  const pagerButtonClass =
+    "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50";
 
   const [filters, setFilters] = useState<FilterState>({
     scope: "ALL",
@@ -101,7 +104,7 @@ export default function PostsArchiveClient({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className={panelClass}>
         <PostsFiltersBar
           state={filters}
           authors={authors}
@@ -129,7 +132,7 @@ export default function PostsArchiveClient({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            className={pagerButtonClass}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={currentPage <= 1}
           >
@@ -137,7 +140,7 @@ export default function PostsArchiveClient({
           </button>
           <button
             type="button"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            className={pagerButtonClass}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage >= totalPages}
           >

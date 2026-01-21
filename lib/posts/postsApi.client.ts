@@ -103,7 +103,10 @@ export async function createPostApi(input: CreatePostInput): Promise<Post> {
 
   const res = await fetch("/api/posts", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(payload),
   });
 

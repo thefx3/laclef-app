@@ -207,11 +207,11 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
   const calendarShellClass =
     "rounded-xl shadow-[0_8px_30px_-12px_rgba(15,23,42,0.35)]";
   const headerWrapClass =
-    "rounded-xl m-6 flex flex-wrap items-center justify-between";
+    "rounded-xl m-6 grid gap-4 items-center lg:grid-cols-3";
   const calendarBadgeClass =
     "flex h-12 w-12 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm";
   const modePillClass =
-    "rounded-full border border-slate-200/70 bg-slate-50/80 px-3 py-1 text-xs font-semibold text-slate-700";
+    "rounded-lg border border-slate-200/70 bg-slate-50/80 px-2.5 py-1.5 text-sm font-semibold text-slate-700";
   const weekdayHeaderClass =
     "grid grid-cols-7 border border-slate-200/80 bg-white/90 text-sm font-semibold uppercase text-slate-800";
   const weekdayCellClass =
@@ -264,7 +264,7 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <button onClick={goPrev} className={arrowBase} aria-label="Période précédente">
               ←
             </button>
@@ -277,7 +277,7 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
           </div>
 
           <button
-            className="btn-action bg-black text-white hover:bg-slate-800"
+            className="btn-action text-xs bg-black text-white hover:bg-slate-800 py-2 px-3"
             onClick={() => setCreating(true)}
           >
             Publier une annonce
