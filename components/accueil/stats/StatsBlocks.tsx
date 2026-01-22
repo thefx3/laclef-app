@@ -24,6 +24,7 @@ type StatCardProps = {
 };
 
 const cardBase = "rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm";
+const chartWrapBase = "min-h-[220px] w-full min-w-0";
 const cardTitle = "text-sm font-semibold text-slate-900";
 const cardSubtitle = "text-xs text-slate-500";
 const tooltipStyle = {
@@ -98,7 +99,7 @@ export function TypeBreakdown({
         <span className="text-xs font-semibold text-slate-600">{total} posts</span>
       </div>
 
-      <div className="mt-4 relative h-100 w-full min-w-0">
+      <div className={`mt-4 mb-10 relative ${chartWrapBase}`}>
         {chartData.length === 0 ? (
           <p className="text-sm text-slate-500">Aucune donnée disponible.</p>
         ) : (
@@ -107,7 +108,7 @@ export function TypeBreakdown({
               <span className="text-xs text-slate-500">Total</span>
               <span className="text-2xl font-semibold text-slate-900">{total}</span>
             </div>
-            <ResponsiveContainer width="100%" height="100%" minHeight={250} minWidth={0}>
+          <ResponsiveContainer width="100%" height="100%" minHeight={220} minWidth={0}>
               <PieChart>
                 <Pie
                   data={chartData}
@@ -185,11 +186,11 @@ function TimeBars({
       <p className={cardTitle}>{title}</p>
       <p className={cardSubtitle}>{subtitle}</p>
 
-      <div className="mt-4 h-48 w-full min-w-0">
+      <div className={`mt-4 ${chartWrapBase}`}>
         {data.length === 0 ? (
           <p className="text-sm text-slate-500">Aucune donnée.</p>
         ) : (
-          <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
+          <ResponsiveContainer width="100%" height="100%" minHeight={220} minWidth={0}>
             <BarChart data={data} margin={{ left: -5, right: 10 }}>
               <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#64748b" }} />
@@ -230,7 +231,7 @@ export function AuthorBreakdown({ authors }: { authors: { name: string; count: n
     <div className={cardBase}>
       <p className={cardTitle}>Posts par auteur</p>
 
-      <div className="mt-4 h-56 w-full min-w-0">
+      <div className={`mt-4 ${chartWrapBase}`}>
         {topAuthors.length === 0 ? (
           <p className="text-sm text-slate-500">Aucune donnée.</p>
         ) : (
