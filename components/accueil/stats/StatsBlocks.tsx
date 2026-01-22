@@ -53,7 +53,7 @@ function StatCard({ label, value, helper, tone = "slate", icon }: StatCardProps)
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
         {icon ? (
-          <span className={`grid h-8 w-8 place-items-center rounded-full ring-1 ${toneRing(tone)}`}>
+          <span className={`grid h-10 w-10 place-items-center rounded-full ring-1 ${toneRing(tone)}`}>
             {icon}
           </span>
         ) : null}
@@ -108,7 +108,7 @@ export function TypeBreakdown({
               <span className="text-xs text-slate-500">Total</span>
               <span className="text-2xl font-semibold text-slate-900">{total}</span>
             </div>
-          <ResponsiveContainer width="100%" height="100%" minHeight={220} minWidth={0}>
+          <ResponsiveContainer width="100%" height="100%" minHeight={250} minWidth={0}>
               <PieChart>
                 <Pie
                   data={chartData}
@@ -280,7 +280,7 @@ export function Highlights({
           nextUpcoming.map((p, i) => (
             <div key={i} className="rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center text-xs text-slate-500">
                   <span
                     className="h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: POST_TYPE_COLORS[p.type] }}

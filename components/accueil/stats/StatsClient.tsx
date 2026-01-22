@@ -17,14 +17,14 @@ export default function StatsClient({ initialPosts }: { initialPosts: Post[] }) 
   const stats = useMemo(() => computeAccueilStats(initialPosts), [initialPosts]);
 
   const kpiItems = [
-    { label: "Total publications", value: stats.total, tone: "sky", icon: <Layers className="h-4 w-4" /> },
+    { label: "Total publications", value: stats.total, tone: "sky", icon: <Layers className="h-6 w-6" /> },
     {
       label: "Actifs aujourd'hui",
       value: stats.activeToday,
       tone: "emerald",
-      icon: <CalendarCheck2 className="h-4 w-4" />,
+      icon: <CalendarCheck2 className="h-6 w-6" />,
     },
-    { label: "Planifiés", value: stats.upcoming, tone: "amber", icon: <CalendarClock className="h-4 w-4" /> },
+    { label: "Planifiés", value: stats.upcoming, tone: "amber", icon: <CalendarClock className="h-6 w-6" /> },
   ] as const;
 
   return (
