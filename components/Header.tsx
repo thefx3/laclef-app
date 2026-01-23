@@ -1,6 +1,7 @@
 import LogoutButton from "./header/LogOutButton";
 import Link from "next/link";
 import { APPS } from "@/lib/apps";
+import MobileNav from "@/components/MobileNav";
 
 type HeaderProps = {
     email: string;
@@ -14,8 +15,8 @@ export default function Header({ email, role }: HeaderProps) {
     return (
         <header className="w-full flex justify-between p-4 shadow-sm bg-white">
         {/* Gauche */}
-        <div>
-
+        <div className="flex items-center">
+          <MobileNav />
         </div>
         <nav className="flex flex-wrap items-center gap-2">
             {APPS.map(({ href, label, Icon, colorClass }) => (

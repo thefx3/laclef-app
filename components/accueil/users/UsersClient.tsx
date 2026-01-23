@@ -248,7 +248,7 @@ export default function UsersClient({
             <h2 className="text-sm uppercase tracking-widest font-semibold text-slate-900">Créer un compte</h2>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
             <label className={labelBase}>
               Prénom
               <input
@@ -316,8 +316,8 @@ export default function UsersClient({
       {/* TABLE */}
       <section className={cardBase}>
 
-        <div className="w-full overflow-x-auto">
-          <table className="min-w-[900px] w-full text-sm">
+        <div className="w-full">
+          <table className="w-full text-sm">
             <colgroup>
               <col className="w-[32%]" />
               <col className="w-[14%]" />
@@ -328,8 +328,8 @@ export default function UsersClient({
             <thead className="bg-slate-50 text-left text-slate-700">
               <tr>
                 <th className="px-4 py-3 text-left justify-items-start">Email</th>
-                <th className="px-4 py-3 text-left">Prénom</th>
-                <th className="px-4 py-3 text-left">Nom</th>
+                <th className="px-4 py-3 text-left hidden sm:table-cell">Prénom</th>
+                <th className="px-4 py-3 text-left hidden sm:table-cell">Nom</th>
                 <th className="px-4 py-3 text-left">Rôle</th>
                 {canShowActions && <th className="px-4 py-3 text-left">Actions</th>}
               </tr>
@@ -343,7 +343,9 @@ export default function UsersClient({
                   <tr key={u.user_id} className="hover:bg-slate-50/70">
                     <td className="px-4 py-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-slate-900">{u.email ?? "—"}</span>
+                        <span className="font-semibold text-slate-900 break-words">
+                          {u.email ?? "—"}
+                        </span>
                         {u.user_id === currentUserId && (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
                             Vous
@@ -351,8 +353,12 @@ export default function UsersClient({
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-slate-700">{u.first_name ?? "—"}</td>
-                    <td className="px-4 py-4 text-slate-700">{u.last_name ?? "—"}</td>
+                    <td className="px-4 py-4 text-slate-700 hidden md:table-cell">
+                      {u.first_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-4 text-slate-700 hidden md:table-cell">
+                      {u.last_name ?? "—"}
+                    </td>
                     <td className="px-4 py-4">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${rolePill(
