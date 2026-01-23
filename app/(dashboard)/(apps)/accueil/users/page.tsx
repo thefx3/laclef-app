@@ -1,7 +1,7 @@
 import PageHeader from "@/components/layout/PageHeader";
 import PageShell from "@/components/layout/PageShell";
 import UsersClient from "@/components/accueil/users/UsersClient";
-import type { AppRole, UserProfileRow } from "@/components/accueil/users/type";
+import type { AppRole, UserProfileRow } from "@/lib/users/types";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
