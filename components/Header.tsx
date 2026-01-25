@@ -1,7 +1,6 @@
 import LogoutButton from "./header/LogOutButton";
-import Link from "next/link";
-import { APPS } from "@/lib/apps";
 import MobileNav from "@/components/MobileNav";
+import AppIcons from "@/components/header/AppIcons";
 
 type HeaderProps = {
     email: string;
@@ -9,28 +8,14 @@ type HeaderProps = {
 }
 
 export default function Header({ email, role }: HeaderProps) {
-    const iconClass =
-    "h-9 w-9 rounded-lg border border-white/70 bg-white/70 p-2 text-slate-700 shadow-sm  transition hover:-translate-y-0.5 hover:bg-white hover:text-slate-900";
 
     return (
-        <header className="w-full flex items-center justify-between p-4 shadow-sm bg-white">
+        <header className="w-full flex items-center justify-between p-4 bg-white">
         {/* Gauche */}
         <div className="flex items-center">
           <MobileNav />
         </div>
-        <nav className="flex flex-wrap items-center gap-2">
-            {APPS.map(({ href, label, Icon, colorClass }) => (
-            <Link
-                key={href}
-                href={href}
-                aria-label={label}
-                title={label}
-                className="inline-flex"
-            >
-                <Icon className={`${iconClass} ${colorClass}`} size={30} />
-            </Link>
-            ))}
-        </nav>
+        <AppIcons />
   
         {/* Droite */}
         <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-700 sm:mt-0">

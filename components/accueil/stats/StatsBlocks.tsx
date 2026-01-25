@@ -99,7 +99,7 @@ export function TypeBreakdown({
         <span className="text-xs font-semibold text-slate-600">{total} posts</span>
       </div>
 
-      <div className={`mt-4 mb-10 relative ${chartWrapBase}`}>
+      <div className={`mt-4 relative ${chartWrapBase}`}>
         {chartData.length === 0 ? (
           <p className="text-sm text-slate-500">Aucune donnée disponible.</p>
         ) : (
@@ -133,7 +133,25 @@ export function TypeBreakdown({
         )}
       </div>
 
-      <div className="mt-4">
+      {chartData.length > 0 ? (
+        <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+          {chartData.map((item) => (
+            <div
+              key={item.type}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-0.5"
+            >
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: item.fill }}
+              />
+              <span className="font-semibold text-slate-700">{item.name}</span>
+              <span className="text-slate-400">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Top type par semaine
         </p>
@@ -280,7 +298,7 @@ export function Highlights({
           nextUpcoming.map((p, i) => (
             <div key={i} className="rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center text-xs text-slate-500">
+                <div className="flex items-center text-xs text-slate-500 gap-2">
                   <span
                     className="h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: POST_TYPE_COLORS[p.type] }}

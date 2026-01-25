@@ -4,11 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import icon from "@/app/icon.png";
-import { APP_NAV, type AppKey } from "@/lib/apps";
+import { APP_NAV, APPS, type AppKey } from "@/lib/apps";
 
 function getAppKeyFromPath(pathname: string | null): AppKey {
   const seg = (pathname ?? "/").split("/")[1];
-  if (seg === "accueil" || seg === "flce" || seg === "musique" || seg === "activites") return seg;
+  const appKeys = APPS.map((app) => app.key);
+  if (appKeys.includes(seg as AppKey)) return seg as AppKey;
   return "accueil";
 }
 
@@ -16,11 +17,14 @@ export default function NavBar() {
   const pathname = usePathname();
 
   const firstSeg = (pathname ?? "/").split("/")[1];
-  const isAppRoute = ["accueil", "flce", "musique", "activites"].includes(firstSeg);
+  const appKeys = APPS.map((app) => app.key);
+  const isAppRoute = appKeys.includes(firstSeg as AppKey);
 
   if (!isAppRoute) return null;
 
   const appKey = getAppKeyFromPath(pathname);
+  const activeApp = APPS.find((app) => app.key === appKey);
+  const activeRingClass = activeApp?.colorClass?.replace("text-", "ring-") ?? "ring-slate-300";
   const links = APP_NAV[appKey];
 
   const navLinkClass =
@@ -40,7 +44,7 @@ export default function NavBar() {
           alt="La CLEF Logo"
           width={56}
           height={56}
-          className="h-14 w-14 rounded-2xl border border-white/80 bg-white/80 p-2 shadow-sm"
+          className={`h-14 w-14 rounded-2xl border border-white/80 bg-white/80 p-2 shadow-sm ring-2 ring-offset-2 ring-offset-white ${activeRingClass}`}
           priority
         />
         <span>La CLEF</span>

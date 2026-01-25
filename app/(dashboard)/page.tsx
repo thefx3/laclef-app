@@ -9,7 +9,7 @@ export async function LauncherHeader() {
   if (!user) return null;
 
   return (
-    <div className="mb-6 flex items-center justify-between rounded-xl border bg-white px-4 py-3">
+    <div className="justify-center flex items-center bg-white px-4 py-3 gap-4">
       <div className="text-sm text-gray-700">
         Connecté : <span className="font-medium">{user.email}</span>
       </div>
@@ -25,11 +25,11 @@ export async function LauncherHeader() {
 
 export default function Launcher() {
   return (
-    <div className="dashboard-shell relative overflow-hidden px-6 py-10 font-sans">
-      <LauncherHeader />
+    <div className="dashboard-shell relative overflow-hidden px-6 py-10 font-sans space-y-8">
+      
       <div className="relative mx-auto w-full max-w-5xl">
         <div className="mb-10 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-700/80">
+          <p className="text-lg font-semibold uppercase tracking-[0.35em] text-emerald-700/80">
             La CLEF
           </p>
           <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">
@@ -70,6 +70,8 @@ export default function Launcher() {
           ))}
         </div>
       </div>
+
+      <LauncherHeader />
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import PageHeader from "@/components/layout/PageHeader";
 import PageShell from "@/components/layout/PageShell";
 
-export default function Musique(){
+export default function Production(){
     return (
       <PageShell>
-        <PageHeader title="MUSIQUE" />
+        <PageHeader title="PRODUCTION" />
 
       </PageShell>
     )

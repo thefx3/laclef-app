@@ -1,13 +1,11 @@
 // lib/apps.ts
 import {
-    Headset,
     Croissant, 
     PersonStanding, 
     Music, 
     Home, 
     PenSquare, 
     ChartNoAxesCombined, 
-    LibraryBig, 
     BookUser, 
     Blocks, 
     Files, 
