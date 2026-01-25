@@ -153,7 +153,7 @@ export function TypeBreakdown({
 
       <div className="mt-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Top type par semaine
+          Top types par semaine
         </p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           {topTypeByWeek.map((week) => (
