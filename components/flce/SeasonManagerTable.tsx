@@ -30,6 +30,8 @@ const buttonSecondary =
   "rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900";
 const buttonDanger =
   "rounded-md border border-rose-200 px-2.5 py-1 text-xs font-semibold text-rose-700 transition hover:border-rose-300 hover:text-rose-800";
+const badgeGreen =
+  "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200";
 
 const formatDateInput = (value: string) => value?.slice(0, 10) ?? "";
 const formatDateDisplay = (value: string) => value?.slice(0, 10) ?? "—";
@@ -130,7 +132,7 @@ export default function SeasonManagerTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xs uppercase tracking-[0.25em] font-semibold text-slate-800">
+        <h2 className="text-md uppercase tracking-[0.25em] font-semibold text-slate-800">
           Saisons
         </h2>
         {isAdmin ? (
@@ -173,7 +175,11 @@ export default function SeasonManagerTable({
                     {formatDateDisplay(season.end_date)}
                   </td>
                   <td className="px-3 py-2 text-slate-700">
-                    {season.is_current ? "Oui" : "Non"}
+                    {season.is_current ? (
+                      <span className={badgeGreen}>En cours</span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   {isAdmin ? (
                     <td className="px-3 py-2">

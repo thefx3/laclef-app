@@ -14,7 +14,7 @@ export default async function FlceLayout({
 
   return (
     <div className="space-y-4">
-      <div className="absolute right-4 top-26 z-20 w-max">
+      <div className="absolute right-4 top-24 z-20 w-max">
         <SeasonSwitcher seasons={seasons} selectedId={selectedId} />
       </div>
         {/* Saison active : <span className="font-semibold">{selected?.code ?? "—"}</span> */}
