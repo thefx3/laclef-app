@@ -1,29 +1,12 @@
 "use client";
 import { supabase } from "@/lib/supabase/browser";
-import { useId, useState } from "react";
-import { APPS, type AppItem, type AppKey } from "@/lib/apps";
-import {
-  ROLE_OPTIONS,
-  type AppPermissionLevel,
-  type AppPermissionMap,
-  type UserProfileWithPermissions,
-  type UserRole,
-} from "@/lib/users/types";
-import {
-  createRoleDefaultPermissions,
-  normalizePermissions,
-} from "@/lib/users/permissions";
+import { useState } from "react";
+import { ROLE_OPTIONS, type UserProfileRow, type UserRole } from "@/lib/users/types";
 import {
   createUserApi,
   deleteUserApi,
   updateUserApi,
 } from "@/lib/users/adminUsersApi.client";
-
-const PERMISSION_COLUMNS: { value: AppPermissionLevel; label: string }[] = [
-  { value: "none", label: "Aucune" },
-  { value: "viewer", label: "Lecteur" },
-  { value: "editor", label: "Editeur" },
-];
 
 const rolePill = (role: UserRole) => {
   switch (role) {
@@ -33,17 +16,6 @@ const rolePill = (role: UserRole) => {
       return "bg-amber-50 text-amber-700 ring-amber-200";
     default:
       return "bg-slate-100 text-slate-700 ring-slate-200";
-  }
-};
-
-const permissionPill = (level: AppPermissionLevel) => {
-  switch (level) {
-    case "editor":
-      return "bg-emerald-50 text-emerald-700 ring-emerald-200";
-    case "viewer":
-      return "bg-sky-50 text-sky-700 ring-sky-200";
-    default:
-      return "bg-slate-100 text-slate-600 ring-slate-200";
   }
 };
 
@@ -66,143 +38,15 @@ const buttonConfirmDelete =
 const confirmRow =
   "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700";
 
-function PermissionSummary({ permissions }: { permissions: AppPermissionMap }) {
-  const enabled = APPS.filter((app) => permissions[app.key] !== "none");
-  if (enabled.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {enabled.map((app) => {
-        const level = permissions[app.key];
-        return (
-          <span
-            key={app.key}
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${permissionPill(
-              level
-            )}`}
-          >
-            {app.label}
-            <span className="text-[10px] uppercase">{level}</span>
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
-const getGlobalPermissionLabel = (
-  permissions: AppPermissionMap
-): { label: string; level: AppPermissionLevel } | null => {
-  const levels = APPS.map((app) => permissions[app.key] ?? "none");
-  const hasAny = levels.some((level) => level !== "none");
-  const hasEditor = levels.some((level) => level === "editor");
-  const hasViewer = levels.some((level) => level === "viewer");
-  const allEditor = levels.every((level) => level === "editor");
-
-  if (!hasAny) return { label: "Aucune autorisation", level: "none" };
-  if (allEditor) return { label: "ADMIN", level: "editor" };
-  if (!hasEditor && hasViewer) return { label: "Lecteur", level: "viewer" };
-  return null;
-};
-
-function PermissionOverview({ permissions }: { permissions: AppPermissionMap }) {
-  const globalLabel = getGlobalPermissionLabel(permissions);
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      {globalLabel && (
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${permissionPill(
-            globalLabel.level
-          )}`}
-        >
-          {globalLabel.label}
-        </span>
-      )}
-      <PermissionSummary permissions={permissions} />
-    </div>
-  );
-}
-
-function PermissionsTable({
-  apps,
-  permissions,
-  onChange,
-  disabled,
-}: {
-  apps: ReadonlyArray<AppItem>;
-  permissions: AppPermissionMap;
-  onChange?: (appKey: AppKey, level: AppPermissionLevel) => void;
-  disabled?: boolean;
-}) {
-  const groupId = useId();
-  const isDisabled = disabled || !onChange;
-
-  return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-slate-600">
-          <tr>
-            <th className="px-3 py-2 text-left">Permissions</th>
-            {PERMISSION_COLUMNS.map((column) => (
-              <th key={column.value} className="px-3 py-2 text-center">
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {apps.map((app) => (
-            <tr key={app.key} className="hover:bg-slate-50/60">
-              <td className="px-3 py-2 font-medium text-slate-700">
-                {app.label}
-              </td>
-              {PERMISSION_COLUMNS.map((column) => {
-                const checked = permissions[app.key] === column.value;
-                return (
-                  <td key={column.value} className="px-3 py-2 text-center">
-                    <input
-                      type="checkbox"
-                      name={`${groupId}-${app.key}`}
-                      value={column.value}
-                      checked={checked}
-                      onChange={(event) => {
-                        if (!onChange) return;
-                        const nextLevel = event.target.checked
-                          ? column.value
-                          : "none";
-                        onChange(app.key, nextLevel);
-                      }}
-                      disabled={isDisabled}
-                      aria-label={`${app.label} ${column.label}`}
-                      className="h-4 w-4 accent-slate-900 disabled:opacity-50"
-                    />
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 function CreateUserForm({
-  appKey,
   canAssignRoles,
   isSuperAdmin,
-  permissionApps,
   onCreated,
   onError,
 }: {
-  appKey: AppKey;
   canAssignRoles: boolean;
   isSuperAdmin: boolean;
-  permissionApps: ReadonlyArray<AppItem>;
-  onCreated: (user: UserProfileWithPermissions) => void;
+  onCreated: (user: UserProfileRow) => void;
   onError: (message: string | null) => void;
 }) {
   const [newEmail, setNewEmail] = useState("");
@@ -210,9 +54,6 @@ function CreateUserForm({
   const [newFirstName, setNewFirstName] = useState("");
   const [newLastName, setNewLastName] = useState("");
   const [newRole, setNewRole] = useState<UserRole>("USER");
-  const [newPermissions, setNewPermissions] = useState<AppPermissionMap>(
-    createRoleDefaultPermissions("USER")
-  );
   const [creating, setCreating] = useState(false);
 
   const resetCreateForm = () => {
@@ -221,7 +62,6 @@ function CreateUserForm({
     setNewFirstName("");
     setNewLastName("");
     setNewRole("USER");
-    setNewPermissions(createRoleDefaultPermissions("USER"));
   };
 
   const handleCreateUser = async () => {
@@ -237,13 +77,11 @@ function CreateUserForm({
     setCreating(true);
     try {
       const result = await createUserApi({
-        appKey,
         email: nextEmail,
         password: newPassword,
         role: canAssignRoles ? newRole : "USER",
         firstName: nextFirst,
         lastName: nextLast,
-        appPermissions: newPermissions,
       });
 
       const createdProfile = result.user_profile;
@@ -312,9 +150,7 @@ function CreateUserForm({
             className={fieldBase}
             value={newRole}
             onChange={(e) => {
-              const nextRole = e.target.value as UserRole;
-              setNewRole(nextRole);
-              setNewPermissions(createRoleDefaultPermissions(nextRole));
+              setNewRole(e.target.value as UserRole);
             }}
             disabled={!canAssignRoles}
           >
@@ -336,22 +172,6 @@ function CreateUserForm({
           {creating ? "Création…" : "Créer"}
         </button>
       </div>
-
-      <div className="mt-4 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Accès apps
-        </p>
-        <PermissionsTable
-          apps={permissionApps}
-          permissions={newPermissions}
-          onChange={(appKeyValue, level) =>
-            setNewPermissions((prev) => ({
-              ...prev,
-              [appKeyValue]: level,
-            }))
-          }
-        />
-      </div>
     </section>
   );
 }
@@ -363,11 +183,11 @@ function UsersTable({
   canManageUser,
   onManage,
 }: {
-  users: UserProfileWithPermissions[];
+  users: UserProfileRow[];
   currentUserId: string;
   canShowActions: boolean;
-  canManageUser: (user: UserProfileWithPermissions) => boolean;
-  onManage: (user: UserProfileWithPermissions) => void;
+  canManageUser: (user: UserProfileRow) => boolean;
+  onManage: (user: UserProfileRow) => void;
 }) {
   return (
     <section className={cardBase}>
@@ -378,7 +198,7 @@ function UsersTable({
             <col className="w-[12%]" />
             <col className="w-[12%]" />
             <col className="w-[12%]" />
-            <col className="w-[24%]" />
+            {/* <col className="w-[24%]" /> */}
             <col className="w-[14%]" />
           </colgroup>
           <thead className="bg-slate-50 text-left text-slate-700">
@@ -393,7 +213,7 @@ function UsersTable({
                 Nom
               </th>
               <th className="px-4 py-3 text-left">Rôle</th>
-              <th className="px-4 py-3 text-left">Apps</th>
+              {/* <th className="px-4 py-3 text-left">Apps</th> */}
               {canShowActions && (
                 <th className="px-4 py-3 text-left">Actions</th>
               )}
@@ -433,10 +253,6 @@ function UsersTable({
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
-                    <PermissionOverview permissions={u.app_permissions} />
-                  </td>
-
                   {canShowActions && (
                     <td className="px-4 py-4 text-left whitespace-nowrap">
                       <div className="inline-flex items-center gap-2">
@@ -474,12 +290,9 @@ function UsersTable({
 function EditUserModal({
   editing,
   currentUserId,
-  appKey,
-  permissionApps,
   canEditProfile,
   canResetPassword,
   canEditRole,
-  canEditAppPermissions,
   canDelete,
   isAdmin,
   isSuperAdmin,
@@ -489,19 +302,16 @@ function EditUserModal({
   onError,
   error,
 }: {
-  editing: UserProfileWithPermissions;
+  editing: UserProfileRow;
   currentUserId: string;
-  appKey: AppKey;
-  permissionApps: ReadonlyArray<AppItem>;
   canEditProfile: boolean;
   canResetPassword: boolean;
   canEditRole: boolean;
-  canEditAppPermissions: boolean;
   canDelete: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
   onClose: () => void;
-  onUpdated: (user: UserProfileWithPermissions) => void;
+  onUpdated: (user: UserProfileRow) => void;
   onDeleted: (userId: string) => void;
   onError: (message: string | null) => void;
   error: string | null;
@@ -511,110 +321,99 @@ function EditUserModal({
   const [editFirstName, setEditFirstName] = useState(editing.first_name ?? "");
   const [editLastName, setEditLastName] = useState(editing.last_name ?? "");
   const [editPassword, setEditPassword] = useState("");
-  const [editPermissions, setEditPermissions] = useState<AppPermissionMap>(
-    normalizePermissions(editing.app_permissions)
-  );
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isSelf = editing.user_id === currentUserId;
   const canEditPassword = canResetPassword;
 
-const handleSaveEdit = async () => {
-  onError(null);
+  const handleSaveEdit = async () => {
+    onError(null);
 
-  const nextEmail = editEmail.trim();
-  if (canEditProfile && !nextEmail) {
-    onError("Email requis.");
-    return;
-  }
-
-  setSavingEdit(true);
-
-  const nextFirst = editFirstName.trim();
-  const nextLast = editLastName.trim();
-  const nextPassword = editPassword.trim();
-  const shouldUpdatePassword = canEditPassword && nextPassword.length > 0;
-
-  try {
-    // 1) Mot de passe du compte courant -> Supabase Auth (self uniquement)
-    if (shouldUpdatePassword && isSelf) {
-      const { error: pwdError } = await supabase.auth.updateUser({
-        password: nextPassword,
-      });
-      if (pwdError) throw new Error(pwdError.message);
+    const nextEmail = editEmail.trim();
+    if (canEditProfile && !nextEmail) {
+      onError("Email requis.");
+      return;
     }
 
-    // 2) SELF (non-admin) : pas d'API /api/admin/users
-    if (isSelf && !isAdmin) {
-      // email (Auth) - optionnel (souvent confirmation email)
-      if (nextEmail !== (editing.email ?? "")) {
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: nextEmail,
+    setSavingEdit(true);
+
+    const nextFirst = editFirstName.trim();
+    const nextLast = editLastName.trim();
+    const nextPassword = editPassword.trim();
+    const shouldUpdatePassword = canEditPassword && nextPassword.length > 0;
+
+    try {
+      // 1) Mot de passe du compte courant -> Supabase Auth (self uniquement)
+      if (shouldUpdatePassword && isSelf) {
+        const { error: pwdError } = await supabase.auth.updateUser({
+          password: nextPassword,
         });
-        if (emailError) throw new Error(emailError.message);
+        if (pwdError) throw new Error(pwdError.message);
       }
 
-      if (canEditProfile) {
-        const { error: profileError } = await supabase
-          .from("user_profiles")
-          .update({
+      // 2) SELF (non-admin) : pas d'API /api/admin/users
+      if (isSelf && !isAdmin) {
+        // email (Auth) - optionnel (souvent confirmation email)
+        if (nextEmail !== (editing.email ?? "")) {
+          const { error: emailError } = await supabase.auth.updateUser({
+            email: nextEmail,
+          });
+          if (emailError) throw new Error(emailError.message);
+        }
+
+        if (canEditProfile) {
+          const { error: profileError } = await supabase
+            .from("user_profiles")
+            .update({
+              email: nextEmail,
+              first_name: nextFirst || null,
+              last_name: nextLast || null,
+              // surtout PAS role ici
+            })
+            .eq("user_id", editing.user_id);
+
+          if (profileError) throw new Error(profileError.message);
+
+          onUpdated({
+            ...editing,
             email: nextEmail,
             first_name: nextFirst || null,
             last_name: nextLast || null,
-            // surtout PAS role ici
-          })
-          .eq("user_id", editing.user_id);
+          });
+        }
 
-        if (profileError) throw new Error(profileError.message);
-
-        onUpdated({
-          ...editing,
-          email: nextEmail,
-          first_name: nextFirst || null,
-          last_name: nextLast || null,
-        });
+        setEditPassword("");
+        onClose();
+        return;
       }
+
+      if (!canEditProfile && !shouldUpdatePassword && !canEditRole) {
+        onError("Mot de passe requis.");
+        return;
+      }
+
+      // 3) ADMIN : endpoint /api/admin/users
+      const result = await updateUserApi({
+        userId: editing.user_id,
+        email: canEditProfile ? nextEmail : undefined,
+        firstName: canEditProfile ? nextFirst || null : undefined,
+        lastName: canEditProfile ? nextLast || null : undefined,
+        role: canEditRole ? editRole : undefined,
+        password:
+          !isSelf && shouldUpdatePassword && isAdmin ? nextPassword : undefined,
+      });
+
+      if (result?.user_profile) onUpdated(result.user_profile);
 
       setEditPassword("");
       onClose();
-      return;
+    } catch (e) {
+      onError((e as Error).message);
+    } finally {
+      setSavingEdit(false);
     }
-
-    if (
-      !canEditProfile &&
-      !shouldUpdatePassword &&
-      !canEditRole &&
-      !canEditAppPermissions
-    ) {
-      onError("Mot de passe requis.");
-      return;
-    }
-
-    // 3) ADMIN : endpoint /api/admin/users
-    const result = await updateUserApi({
-      appKey,
-      userId: editing.user_id,
-      email: canEditProfile ? nextEmail : undefined,
-      firstName: canEditProfile ? nextFirst || null : undefined,
-      lastName: canEditProfile ? nextLast || null : undefined,
-      role: canEditRole ? editRole : undefined,
-      password:
-        !isSelf && shouldUpdatePassword && isAdmin ? nextPassword : undefined,
-      appPermissions: canEditAppPermissions ? editPermissions : undefined,
-    });
-
-    if (result?.user_profile) onUpdated(result.user_profile);
-
-    setEditPassword("");
-    onClose();
-  } catch (e) {
-    onError((e as Error).message);
-  } finally {
-    setSavingEdit(false);
-  }
-};
-
+  };
 
   const handleDeleteUser = async () => {
     if (!canDelete) {
@@ -624,7 +423,7 @@ const handleSaveEdit = async () => {
     onError(null);
     setDeletingUserId(editing.user_id);
     try {
-      await deleteUserApi(editing.user_id, appKey);
+      await deleteUserApi(editing.user_id);
       onDeleted(editing.user_id);
       onClose();
     } catch (e) {
@@ -634,8 +433,6 @@ const handleSaveEdit = async () => {
       setConfirmDelete(false);
     }
   };
-
-  const permissionTableApps = canEditAppPermissions ? permissionApps : APPS;
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center backdrop-blur bg-black/40 p-4">
@@ -740,24 +537,6 @@ const handleSaveEdit = async () => {
             </label>
           </div>
 
-          <div className="space-y-2">
-            <p className={labelBase}>Accès apps</p>
-            <PermissionsTable
-              apps={permissionTableApps}
-              permissions={editPermissions}
-              onChange={
-                canEditAppPermissions
-                  ? (appKeyValue, level) =>
-                      setEditPermissions((prev) => ({
-                        ...prev,
-                        [appKeyValue]: level,
-                      }))
-                  : undefined
-              }
-              disabled={!canEditAppPermissions}
-            />
-          </div>
-
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
             {canDelete ? (
               <button
@@ -825,54 +604,43 @@ export default function UsersClient({
   initialUsers,
   currentRole,
   currentUserId,
-  currentAppPermission,
-  appKey,
 }: {
-  initialUsers: UserProfileWithPermissions[];
+  initialUsers: UserProfileRow[];
   currentRole: UserRole;
   currentUserId: string;
-  currentAppPermission: AppPermissionLevel;
-  appKey: AppKey;
 }) {
-  const [users, setUsers] = useState<UserProfileWithPermissions[]>(initialUsers);
+  const [users, setUsers] = useState<UserProfileRow[]>(initialUsers);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<UserProfileWithPermissions | null>(null);
+  const [editing, setEditing] = useState<UserProfileRow | null>(null);
 
   const isAdmin = currentRole === "ADMIN" || currentRole === "SUPER_ADMIN";
   const isSuperAdmin = currentRole === "SUPER_ADMIN";
   const canAssignRoles = isSuperAdmin;
   const canCreate = isSuperAdmin;
-  const permissionApps = isAdmin
-    ? APPS
-    : APPS.filter((app) => app.key === appKey);
 
-  const canEditProfile = (u: UserProfileWithPermissions) => {
+  const canEditProfile = (u: UserProfileRow) => {
     if (isSuperAdmin) return true;
-    if (isAdmin) {
-      if (u.role === "SUPER_ADMIN") return false;
-      if (u.role === "ADMIN" && u.user_id !== currentUserId) return false;
-      return true;
-    }
+    if (isAdmin) return u.role !== "SUPER_ADMIN";
     return u.user_id === currentUserId;
   };
 
-  const canDeleteUser = (u: UserProfileWithPermissions) => {
+  const canDeleteUser = (u: UserProfileRow) => {
     if (isSuperAdmin) return u.user_id !== currentUserId;
     if (isAdmin) {
       if (u.user_id === currentUserId) return false;
       if (u.role === "SUPER_ADMIN") return false;
-      if (u.role === "ADMIN") return false;
       return true;
     }
     return false;
   };
 
-  const canResetPassword = (u: UserProfileWithPermissions) => {
-    if (isAdmin) return true;
+  const canResetPassword = (u: UserProfileRow) => {
+    if (isSuperAdmin) return true;
+    if (isAdmin) return u.role !== "SUPER_ADMIN";
     return u.user_id === currentUserId;
   };
 
-  const canManageUser = (u: UserProfileWithPermissions) =>
+  const canManageUser = (u: UserProfileRow) =>
     canEditProfile(u) || canResetPassword(u);
 
   const canShowActions = isAdmin || users.some((u) => u.user_id === currentUserId);
@@ -882,15 +650,15 @@ export default function UsersClient({
     !!editing &&
     canEditProfileEditing &&
     isAdmin &&
-    (isSuperAdmin || editing.role !== "SUPER_ADMIN");
-  const canEditAppPermissions = isAdmin && canEditProfileEditing;
+    (isSuperAdmin ||
+      (editing.role !== "SUPER_ADMIN" && editing.user_id !== currentUserId));
   const canDeleteEditing = !!editing && canDeleteUser(editing);
 
-  const handleCreatedUser = (user: UserProfileWithPermissions) => {
+  const handleCreatedUser = (user: UserProfileRow) => {
     setUsers((prev) => [user, ...prev]);
   };
 
-  const handleUpdatedUser = (user: UserProfileWithPermissions) => {
+  const handleUpdatedUser = (user: UserProfileRow) => {
     setUsers((prev) =>
       prev.map((existing) =>
         existing.user_id === user.user_id ? user : existing
@@ -912,10 +680,8 @@ export default function UsersClient({
 
       {canCreate && (
         <CreateUserForm
-          appKey={appKey}
           canAssignRoles={canAssignRoles}
           isSuperAdmin={isSuperAdmin}
-          permissionApps={permissionApps}
           onCreated={handleCreatedUser}
           onError={setError}
         />
@@ -937,12 +703,9 @@ export default function UsersClient({
           key={editing.user_id}
           editing={editing}
           currentUserId={currentUserId}
-          appKey={appKey}
-          permissionApps={permissionApps}
           canEditProfile={canEditProfileEditing}
           canResetPassword={canResetPasswordEditing}
           canEditRole={canEditRole}
-          canEditAppPermissions={canEditAppPermissions}
           canDelete={canDeleteEditing}
           isAdmin={isAdmin}
           isSuperAdmin={isSuperAdmin}

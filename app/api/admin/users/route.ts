@@ -1,52 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import type { AppKey } from "@/lib/apps";
-import {
-  ROLE_OPTIONS,
-  type AppPermissionLevel,
-  type AppPermissionMap,
-  type UserRole,
-} from "@/lib/users/types";
-import {
-  APP_KEY_SET,
-  LEVEL_RANK,
-  PERMISSION_LEVEL_SET,
-  createEmptyPermissions,
-  normalizePermissions,
-} from "@/lib/users/permissions";
+import { ROLE_OPTIONS, type UserRole } from "@/lib/users/types";
 
 const ADMIN_ROLES = new Set<UserRole>(["ADMIN", "SUPER_ADMIN"]);
 
 const isUserRole = (value: string): value is UserRole =>
   ROLE_OPTIONS.includes(value as UserRole);
-const isAppKey = (value: string): value is AppKey =>
-  APP_KEY_SET.has(value as AppKey);
-const isPermissionLevel = (value: string): value is AppPermissionLevel =>
-  PERMISSION_LEVEL_SET.has(value as AppPermissionLevel);
-
-const permissionsFromRows = (
-  rows: { app_key?: string | null; level?: string | null }[]
-): AppPermissionMap => {
-  const base = createEmptyPermissions();
-  for (const row of rows) {
-    const appKey = String(row.app_key ?? "");
-    const level = String(row.level ?? "");
-    if (!isAppKey(appKey) || !isPermissionLevel(level)) continue;
-    base[appKey] = level;
-  }
-  return base;
-};
-
-const toPermissionRows = (userId: string, permissions: AppPermissionMap) =>
-  Object.entries(permissions)
-    .filter(([, level]) => level !== "none")
-    .map(([appKey, level]) => ({ user_id: userId, app_key: appKey, level }));
-
-const resolveAppKey = (value: unknown): AppKey | null => {
-  const raw = String(value ?? "accueil").trim();
-  return isAppKey(raw) ? raw : null;
-};
-
 async function readBody(req: Request) {
   try {
     return await req.json();
@@ -55,11 +14,7 @@ async function readBody(req: Request) {
   }
 }
 
-async function requireAccess(
-  req: Request,
-  appKey: AppKey,
-  minLevel: AppPermissionLevel
-) {
+async function requireAuth(req: Request) {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) {
     return { error: "Token manquant", status: 401 } as const;
@@ -87,39 +42,13 @@ async function requireAccess(
   const role = isUserRole(rawRole) ? rawRole : "USER";
 
   const isAdmin = ADMIN_ROLES.has(role);
-  if (isAdmin) {
-    return {
-      user: userData.user,
-      role,
-      isAdmin: true,
-      appLevel: "editor" as AppPermissionLevel,
-    } as const;
-  }
-
-  const { data: permission, error: permissionErr } = await supabaseAdmin
-    .from("user_app_permissions")
-    .select("level")
-    .eq("user_id", userData.user.id)
-    .eq("app_key", appKey)
-    .maybeSingle();
-
-  if (permissionErr) {
-    return { error: permissionErr.message, status: 403 } as const;
-  }
-
-  const level = isPermissionLevel(String(permission?.level ?? ""))
-    ? (permission!.level as AppPermissionLevel)
-    : "none";
-
-  if (LEVEL_RANK[level] < LEVEL_RANK[minLevel]) {
-    return { error: "Acces interdit", status: 403 } as const;
-  }
+  const isSuperAdmin = role === "SUPER_ADMIN";
 
   return {
     user: userData.user,
     role,
-    isAdmin: false,
-    appLevel: level,
+    isAdmin,
+    isSuperAdmin,
   } as const;
 }
 
@@ -129,12 +58,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const appKey = resolveAppKey(body.app_key);
-  if (!appKey) {
-    return NextResponse.json({ error: "App invalide" }, { status: 400 });
-  }
-
-  const auth = await requireAccess(req, appKey, "none");
+  const auth = await requireAuth(req);
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -143,15 +67,6 @@ export async function POST(req: Request) {
       { error: "Permission insuffisante pour creer un compte" },
       { status: 403 }
     );
-  }
-
-  if (
-    Object.prototype.hasOwnProperty.call(body, "app_permissions") &&
-    (typeof body.app_permissions !== "object" ||
-      body.app_permissions === null ||
-      Array.isArray(body.app_permissions))
-  ) {
-    return NextResponse.json({ error: "Permissions invalides" }, { status: 400 });
   }
 
   const email = String(body.email ?? "").trim();
@@ -178,15 +93,6 @@ export async function POST(req: Request) {
       { status: 403 }
     );
   }
-
-  const permissions = normalizePermissions(body.app_permissions);
-  const scopedPermissions = auth.isAdmin
-    ? permissions
-    : (() => {
-        const limited = createEmptyPermissions();
-        limited[appKey] = permissions[appKey];
-        return limited;
-      })();
 
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
@@ -224,24 +130,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const permissionRows = toPermissionRows(data.user.id, scopedPermissions);
-  if (permissionRows.length > 0) {
-    const { error: permissionsErr } = await supabaseAdmin
-      .from("user_app_permissions")
-      .upsert(permissionRows, { onConflict: "user_id,app_key" });
-
-    if (permissionsErr) {
-      await supabaseAdmin.auth.admin.deleteUser(data.user.id);
-      await supabaseAdmin.from("user_profiles").delete().eq("user_id", data.user.id);
-      return NextResponse.json(
-        { error: permissionsErr.message },
-        { status: 400 }
-      );
-    }
-  }
-
   return NextResponse.json(
-    { user_profile: { ...profile, app_permissions: scopedPermissions } },
+    { user_profile: profile },
     { status: 201 }
   );
 }
@@ -252,12 +142,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const appKey = resolveAppKey(body.app_key);
-  if (!appKey) {
-    return NextResponse.json({ error: "App invalide" }, { status: 400 });
-  }
-
-  const auth = await requireAccess(req, appKey, "editor");
+  const auth = await requireAuth(req);
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -268,8 +153,6 @@ export async function PATCH(req: Request) {
   const hasFirstName = Object.prototype.hasOwnProperty.call(body, "first_name");
   const hasLastName = Object.prototype.hasOwnProperty.call(body, "last_name");
   const hasPassword = Object.prototype.hasOwnProperty.call(body, "password");
-  const hasAppPermissions = Object.prototype.hasOwnProperty.call(body, "app_permissions");
-
   const roleInput = hasRole ? String(body.role ?? "").trim() : "";
   const email = hasEmail ? String(body.email ?? "").trim() : "";
   const firstName = hasFirstName ? String(body.first_name ?? "").trim() : "";
@@ -279,7 +162,7 @@ export async function PATCH(req: Request) {
   if (!userId) {
     return NextResponse.json({ error: "user_id requis" }, { status: 400 });
   }
-  if (!hasRole && !hasEmail && !hasFirstName && !hasLastName && !hasPassword && !hasAppPermissions) {
+  if (!hasRole && !hasEmail && !hasFirstName && !hasLastName && !hasPassword) {
     return NextResponse.json(
       { error: "Aucune modification demandee" },
       { status: 400 }
@@ -309,16 +192,22 @@ export async function PATCH(req: Request) {
   if (!auth.isAdmin && hasRole) {
     return NextResponse.json({ error: "Acces interdit" }, { status: 403 });
   }
-  if (!auth.isAdmin && hasAppPermissions) {
+  if (auth.role === "ADMIN" && userId === auth.user.id && hasRole) {
     return NextResponse.json({ error: "Acces interdit" }, { status: 403 });
   }
-  if (
-    hasAppPermissions &&
-    (typeof body.app_permissions !== "object" ||
-      body.app_permissions === null ||
-      Array.isArray(body.app_permissions))
-  ) {
-    return NextResponse.json({ error: "Permissions invalides" }, { status: 400 });
+
+  const { data: existingProfile, error: existingErr } = await supabaseAdmin
+    .from("user_profiles")
+    .select("user_id, email, first_name, last_name, role, created_at")
+    .eq("user_id", userId)
+    .single();
+
+  if (existingErr || !existingProfile) {
+    return NextResponse.json({ error: "Profil introuvable" }, { status: 404 });
+  }
+
+  if (auth.role === "ADMIN" && String(existingProfile.role ?? "USER") === "SUPER_ADMIN") {
+    return NextResponse.json({ error: "Acces interdit" }, { status: 403 });
   }
 
   if (email) {
@@ -346,7 +235,7 @@ export async function PATCH(req: Request) {
   if (hasFirstName) profileUpdates.first_name = firstName || null;
   if (hasLastName) profileUpdates.last_name = lastName || null;
 
-  let updatedProfile = null;
+  let updatedProfile = existingProfile;
   if (Object.keys(profileUpdates).length > 0) {
     const { data: profile, error } = await supabaseAdmin
       .from("user_profiles")
@@ -363,84 +252,9 @@ export async function PATCH(req: Request) {
     }
 
     updatedProfile = profile;
-  } else {
-    const { data: profile } = await supabaseAdmin
-      .from("user_profiles")
-      .select("user_id, email, first_name, last_name, role, created_at")
-      .eq("user_id", userId)
-      .single();
-
-    updatedProfile = profile ?? null;
   }
 
-  if (!updatedProfile) {
-    return NextResponse.json(
-      { error: "Profil introuvable" },
-      { status: 404 }
-    );
-  }
-
-  let responsePermissions: AppPermissionMap | null = null;
-  if (hasAppPermissions) {
-    const permissions = normalizePermissions(body.app_permissions);
-    responsePermissions = auth.isAdmin
-      ? permissions
-      : (() => {
-          const limited = createEmptyPermissions();
-          limited[appKey] = permissions[appKey];
-          return limited;
-        })();
-
-    const permissionRows = toPermissionRows(userId, responsePermissions);
-    if (permissionRows.length > 0) {
-      const { error: permissionsErr } = await supabaseAdmin
-        .from("user_app_permissions")
-        .upsert(permissionRows, { onConflict: "user_id,app_key" });
-
-      if (permissionsErr) {
-        return NextResponse.json(
-          { error: permissionsErr.message },
-          { status: 400 }
-        );
-      }
-    }
-
-    const toClear = Object.entries(responsePermissions)
-      .filter(([, level]) => level === "none")
-      .map(([key]) => key);
-
-    if (toClear.length > 0) {
-      const { error: clearErr } = await supabaseAdmin
-        .from("user_app_permissions")
-        .delete()
-        .eq("user_id", userId)
-        .in("app_key", toClear);
-
-      if (clearErr) {
-        return NextResponse.json(
-          { error: clearErr.message },
-          { status: 400 }
-        );
-      }
-    }
-  }
-
-  if (!responsePermissions) {
-    const { data: rows, error } = await supabaseAdmin
-      .from("user_app_permissions")
-      .select("app_key, level")
-      .eq("user_id", userId);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    responsePermissions = permissionsFromRows(rows ?? []);
-  }
-
-  return NextResponse.json({
-    user_profile: { ...updatedProfile, app_permissions: responsePermissions },
-  });
+  return NextResponse.json({ user_profile: updatedProfile });
 }
 
 export async function DELETE(req: Request) {
@@ -449,12 +263,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const appKey = resolveAppKey(body.app_key);
-  if (!appKey) {
-    return NextResponse.json({ error: "App invalide" }, { status: 400 });
-  }
-
-  const auth = await requireAccess(req, appKey, "editor");
+  const auth = await requireAuth(req);
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -471,12 +280,25 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Suppression interdite" }, { status: 403 });
   }
 
+  const { data: existingProfile, error: existingErr } = await supabaseAdmin
+    .from("user_profiles")
+    .select("role")
+    .eq("user_id", userId)
+    .single();
+
+  if (existingErr || !existingProfile) {
+    return NextResponse.json({ error: "Profil introuvable" }, { status: 404 });
+  }
+
+  if (auth.role === "ADMIN" && String(existingProfile.role ?? "USER") === "SUPER_ADMIN") {
+    return NextResponse.json({ error: "Acces interdit" }, { status: 403 });
+  }
+
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  await supabaseAdmin.from("user_app_permissions").delete().eq("user_id", userId);
   await supabaseAdmin.from("user_profiles").delete().eq("user_id", userId);
 
   return NextResponse.json({ ok: true });

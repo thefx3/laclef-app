@@ -1,13 +1,8 @@
 import { supabase } from "@/lib/supabase/browser";
-import type { AppKey } from "@/lib/apps";
-import type {
-  AppPermissionMap,
-  UserProfileWithPermissions,
-  UserRole,
-} from "@/lib/users/types";
+import type { UserProfileRow, UserRole } from "@/lib/users/types";
 
 type AdminUsersResponse = {
-  user_profile?: UserProfileWithPermissions;
+  user_profile?: UserProfileRow;
 };
 
 async function adminFetch<T>(
@@ -49,41 +44,34 @@ async function adminFetch<T>(
 }
 
 type CreateUserInput = {
-  appKey: AppKey;
   email: string;
   password: string;
   role: UserRole;
   firstName: string;
   lastName: string;
-  appPermissions: AppPermissionMap;
 };
 
 export async function createUserApi(input: CreateUserInput) {
   return adminFetch<AdminUsersResponse>("POST", {
-    app_key: input.appKey,
     email: input.email,
     password: input.password,
     role: input.role,
     first_name: input.firstName,
     last_name: input.lastName,
-    app_permissions: input.appPermissions,
   });
 }
 
 type UpdateUserInput = {
-  appKey: AppKey;
   userId: string;
   email?: string;
   role?: UserRole;
   firstName?: string | null;
   lastName?: string | null;
   password?: string;
-  appPermissions?: AppPermissionMap;
 };
 
 export async function updateUserApi(input: UpdateUserInput) {
   const payload: Record<string, unknown> = {
-    app_key: input.appKey,
     user_id: input.userId,
   };
   if (input.email !== undefined) payload.email = input.email;
@@ -91,13 +79,10 @@ export async function updateUserApi(input: UpdateUserInput) {
   if (input.firstName !== undefined) payload.first_name = input.firstName;
   if (input.lastName !== undefined) payload.last_name = input.lastName;
   if (input.password !== undefined) payload.password = input.password;
-  if (input.appPermissions !== undefined) {
-    payload.app_permissions = input.appPermissions;
-  }
 
   return adminFetch<AdminUsersResponse>("PATCH", payload);
 }
 
-export async function deleteUserApi(userId: string, appKey: AppKey) {
-  await adminFetch<{ ok: true }>("DELETE", { user_id: userId, app_key: appKey });
+export async function deleteUserApi(userId: string) {
+  await adminFetch<{ ok: true }>("DELETE", { user_id: userId });
 }
