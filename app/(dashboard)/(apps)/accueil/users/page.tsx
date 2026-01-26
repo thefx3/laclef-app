@@ -1,28 +1,14 @@
 import PageHeader from "@/components/layout/PageHeader";
 import PageShell from "@/components/layout/PageShell";
 import UsersClient from "@/components/accueil/users/UsersClient";
-import type { UserProfileRow, UserRole } from "@/lib/users/types";
+import type { UserProfileRow } from "@/lib/users/types";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getViewerServer } from "@/lib/auth/viewer.server";
 import { redirect } from "next/navigation";
 
 export default async function UsersPage() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, role: currentRole } = await getViewerServer();
   if (!user) redirect("/login");
-
-  const { data: me } = await supabaseAdmin
-    .from("user_profiles")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-
-  const rawRole = String(me?.role ?? "USER");
-  const currentRole: UserRole =
-    rawRole === "ADMIN" || rawRole === "SUPER_ADMIN" ? rawRole : "USER";
 
   const { data, error } = await supabaseAdmin
     .from("user_profiles")
