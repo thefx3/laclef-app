@@ -1,52 +1,28 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { APPS } from "@/lib/apps";
 import type { AppKey } from "@/lib/apps";
 import {
-  APP_PERMISSION_LEVELS,
+  ROLE_OPTIONS,
   type AppPermissionLevel,
   type AppPermissionMap,
+  type UserRole,
 } from "@/lib/users/types";
-
-const ROLE_OPTIONS = ["USER", "ADMIN", "SUPER_ADMIN"] as const;
-
-type UserRole = (typeof ROLE_OPTIONS)[number];
+import {
+  APP_KEY_SET,
+  LEVEL_RANK,
+  PERMISSION_LEVEL_SET,
+  createEmptyPermissions,
+  normalizePermissions,
+} from "@/lib/users/permissions";
 
 const ADMIN_ROLES = new Set<UserRole>(["ADMIN", "SUPER_ADMIN"]);
-const APP_KEYS = new Set(APPS.map((app) => app.key));
-const PERMISSION_LEVELS = new Set(APP_PERMISSION_LEVELS);
-const LEVEL_RANK: Record<AppPermissionLevel, number> = {
-  none: 0,
-  viewer: 1,
-  editor: 2,
-};
 
 const isUserRole = (value: string): value is UserRole =>
   ROLE_OPTIONS.includes(value as UserRole);
-const isAppKey = (value: string): value is AppKey => APP_KEYS.has(value as AppKey);
+const isAppKey = (value: string): value is AppKey =>
+  APP_KEY_SET.has(value as AppKey);
 const isPermissionLevel = (value: string): value is AppPermissionLevel =>
-  PERMISSION_LEVELS.has(value as AppPermissionLevel);
-
-const createEmptyPermissions = (): AppPermissionMap =>
-  APPS.reduce((acc, app) => {
-    acc[app.key] = "none";
-    return acc;
-  }, {} as AppPermissionMap);
-
-const normalizePermissions = (input: unknown): AppPermissionMap => {
-  const base = createEmptyPermissions();
-  if (!input || typeof input !== "object" || Array.isArray(input)) return base;
-
-  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
-    if (!isAppKey(key)) continue;
-    const next = String(value ?? "");
-    if (isPermissionLevel(next)) {
-      base[key] = next;
-    }
-  }
-
-  return base;
-};
+  PERMISSION_LEVEL_SET.has(value as AppPermissionLevel);
 
 const permissionsFromRows = (
   rows: { app_key?: string | null; level?: string | null }[]
@@ -161,6 +137,12 @@ export async function POST(req: Request) {
   const auth = await requireAccess(req, appKey, "none");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  if (auth.role !== "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "Permission insuffisante pour creer un compte" },
+      { status: 403 }
+    );
   }
 
   if (

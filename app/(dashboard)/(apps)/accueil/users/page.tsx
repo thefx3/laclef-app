@@ -1,26 +1,24 @@
 import PageHeader from "@/components/layout/PageHeader";
 import PageShell from "@/components/layout/PageShell";
 import UsersClient from "@/components/accueil/users/UsersClient";
-import { APPS, type AppKey } from "@/lib/apps";
+import type { AppKey } from "@/lib/apps";
 import {
-  APP_PERMISSION_LEVELS,
   type AppPermissionLevel,
   type AppPermissionMap,
   type UserProfileRow,
   type UserProfileWithPermissions,
   type UserRole,
 } from "@/lib/users/types";
+import {
+  APP_KEY_SET,
+  PERMISSION_LEVEL_SET,
+  createEmptyPermissions,
+} from "@/lib/users/permissions";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 const APP_KEY: AppKey = "accueil";
-
-const createEmptyPermissions = (): AppPermissionMap =>
-  APPS.reduce((acc, app) => {
-    acc[app.key] = "none";
-    return acc;
-  }, {} as AppPermissionMap);
 
 export default async function UsersPage() {
   const supabase = await createClient();
@@ -55,15 +53,17 @@ export default async function UsersPage() {
   if (permissionsError) throw permissionsError;
 
   const emptyPermissions = createEmptyPermissions();
-  const appKeys = new Set(APPS.map((app) => app.key));
-  const permissionLevels = new Set(APP_PERMISSION_LEVELS);
   const permissionsByUser = new Map<string, AppPermissionMap>();
 
   for (const row of permissionRows ?? []) {
     const userId = String(row.user_id ?? "");
     const appKey = String(row.app_key ?? "");
     const level = String(row.level ?? "");
-    if (!userId || !appKeys.has(appKey as AppKey) || !permissionLevels.has(level as AppPermissionLevel)) {
+    if (
+      !userId ||
+      !APP_KEY_SET.has(appKey as AppKey) ||
+      !PERMISSION_LEVEL_SET.has(level as AppPermissionLevel)
+    ) {
       continue;
     }
 

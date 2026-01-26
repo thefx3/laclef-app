@@ -10,6 +10,10 @@ import {
   type UserRole,
 } from "@/lib/users/types";
 import {
+  createRoleDefaultPermissions,
+  normalizePermissions,
+} from "@/lib/users/permissions";
+import {
   createUserApi,
   deleteUserApi,
   updateUserApi,
@@ -43,37 +47,6 @@ const permissionPill = (level: AppPermissionLevel) => {
   }
 };
 
-const createEmptyPermissions = (): AppPermissionMap =>
-  APPS.reduce((acc, app) => {
-    acc[app.key] = "none";
-    return acc;
-  }, {} as AppPermissionMap);
-
-const createRoleDefaultPermissions = (role: UserRole): AppPermissionMap => {
-  const level: AppPermissionLevel =
-    role === "ADMIN" || role === "SUPER_ADMIN" ? "editor" : "viewer";
-
-  return APPS.reduce((acc, app) => {
-    acc[app.key] = level;
-    return acc;
-  }, {} as AppPermissionMap);
-};
-
-const normalizePermissions = (
-  input?: Partial<AppPermissionMap> | null
-): AppPermissionMap => {
-  const base = createEmptyPermissions();
-  if (!input) return base;
-
-  for (const [key, value] of Object.entries(input)) {
-    if (!Object.prototype.hasOwnProperty.call(base, key)) continue;
-    if (!value) continue;
-    base[key as AppKey] = value as AppPermissionLevel;
-  }
-
-  return base;
-};
-
 const fieldBase =
   "mt-1 w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none";
 const cardBase = "rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm";
@@ -96,7 +69,7 @@ const confirmRow =
 function PermissionSummary({ permissions }: { permissions: AppPermissionMap }) {
   const enabled = APPS.filter((app) => permissions[app.key] !== "none");
   if (enabled.length === 0) {
-    return <span className="text-slate-400">—</span>;
+    return null;
   }
 
   return (
@@ -115,6 +88,40 @@ function PermissionSummary({ permissions }: { permissions: AppPermissionMap }) {
           </span>
         );
       })}
+    </div>
+  );
+}
+
+const getGlobalPermissionLabel = (
+  permissions: AppPermissionMap
+): { label: string; level: AppPermissionLevel } | null => {
+  const levels = APPS.map((app) => permissions[app.key] ?? "none");
+  const hasAny = levels.some((level) => level !== "none");
+  const hasEditor = levels.some((level) => level === "editor");
+  const hasViewer = levels.some((level) => level === "viewer");
+  const allEditor = levels.every((level) => level === "editor");
+
+  if (!hasAny) return { label: "Aucune autorisation", level: "none" };
+  if (allEditor) return { label: "ADMIN", level: "editor" };
+  if (!hasEditor && hasViewer) return { label: "Lecteur", level: "viewer" };
+  return null;
+};
+
+function PermissionOverview({ permissions }: { permissions: AppPermissionMap }) {
+  const globalLabel = getGlobalPermissionLabel(permissions);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {globalLabel && (
+        <span
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${permissionPill(
+            globalLabel.level
+          )}`}
+        >
+          {globalLabel.label}
+        </span>
+      )}
+      <PermissionSummary permissions={permissions} />
     </div>
   );
 }
@@ -427,7 +434,7 @@ function UsersTable({
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <PermissionSummary permissions={u.app_permissions} />
+                    <PermissionOverview permissions={u.app_permissions} />
                   </td>
 
                   {canShowActions && (
@@ -833,9 +840,8 @@ export default function UsersClient({
 
   const isAdmin = currentRole === "ADMIN" || currentRole === "SUPER_ADMIN";
   const isSuperAdmin = currentRole === "SUPER_ADMIN";
-  const canAssignRoles = isAdmin;
-  const canManageUsers = isAdmin || currentAppPermission === "editor";
-  const canCreate = canManageUsers;
+  const canAssignRoles = isSuperAdmin;
+  const canCreate = isSuperAdmin;
   const permissionApps = isAdmin
     ? APPS
     : APPS.filter((app) => app.key === appKey);
