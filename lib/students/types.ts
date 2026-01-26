@@ -1,0 +1,67 @@
+export type AuPairDetail = {
+  family_name1: string | null;
+  family_name2: string | null;
+  family_email: string | null;
+};
+
+export type RecordKind = "LEAD" | "PRE_REGISTERED" | "ENROLLED" | "LEFT";
+
+export type StudentRow = {
+  id: string;
+  record_kind: RecordKind;
+
+  dossier_number: string | null;
+  last_name: string;
+  first_name: string;
+
+  class_code: string | null;
+  note: string | null;
+
+  gender: "M" | "F" | "X" | null;
+
+  arrival_date: string | null;
+  departure_date: string | null;
+
+  birth_date: string | null;
+  birth_place: string | null;
+
+  is_au_pair: boolean;
+  left_early: boolean | null;
+
+  season_id: string | null;
+
+  pre_registration: boolean;
+  paid_150: boolean | null;
+  paid_total: boolean;
+
+  au_pair_details: AuPairDetail[] | AuPairDetail | null;
+
+  created_at: string;
+};
+
+export type Tab = "ENROLLED" | "PRE_REGISTERED" | "LEAD" | "LEFT";
+export type SortKey = "last_name" | "first_name";
+export type SortState = { key: SortKey; direction: "asc" | "desc" } | null;
+
+export type EditFormState = {
+  first_name: string;
+  last_name: string;
+  class_code: string;
+  note: string;
+  gender: "M" | "F" | "X" | "";
+  arrival_date: string;
+  departure_date: string;
+  birth_date: string;
+  birth_place: string;
+  is_au_pair: boolean;
+  left_early: boolean;
+  season_id: string;
+  pre_registration: boolean;
+  paid_150: boolean;
+  paid_total: boolean;
+  dossier_number: string;
+
+  family_name1: string;
+  family_name2: string;
+  family_email: string;
+};
