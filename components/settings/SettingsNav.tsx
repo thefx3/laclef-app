@@ -13,14 +13,14 @@ export default function SettingsNav() {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 mb-4 w-fit rounded-md bg-[var(--grey)] p-1 inset-shadow-md">
       {tabs.map((tab) => {
         const isActive = pathname?.startsWith(tab.href) ?? false;
         return (
           <Link
             key={tab.href}
             href={tab.href}
-            className={cn("btn-filter", isActive ? "btn-filter--active" : "btn-filter--inactive")}
+            className={cn("btn-tab", isActive ?  "btn-tab--active shadow-sm" : "btn-tab--inactive")}
             aria-current={isActive ? "page" : undefined}
           >
             {tab.label}
