@@ -9,7 +9,8 @@ export type StudentStatRow = {
   gender: "M" | "F" | "X" | null;
   is_au_pair: boolean | null;
   pre_registration: boolean | null;
-  class_code: string | null;
+  class_s1_code: string | null;
+  class_s2_code: string | null;
   birth_place: string | null;
   birth_date: string | null;
   arrival_date: string | null;
@@ -58,9 +59,9 @@ export async function fetchStudentStatsRows(seasonId: string | null) {
   const supabase = await createClient();
 
   let query = supabase
-    .from("students")
+    .from("students_with_classes")
     .select(
-      "record_kind, gender, is_au_pair, pre_registration, class_code, birth_place, birth_date, arrival_date, departure_date"
+      "record_kind, gender, is_au_pair, pre_registration, class_s1_code, class_s2_code, birth_place, birth_date, arrival_date, departure_date"
     );
 
   if (seasonId) query = query.eq("season_id", seasonId);
@@ -120,8 +121,12 @@ export function buildStudentStats(
     else if (row.is_au_pair === false) auPair.no += 1;
     else auPair.unknown += 1;
 
-    if (row.class_code) {
-      const key = row.class_code.trim().toUpperCase();
+    if (row.class_s1_code) {
+      const key = row.class_s1_code.trim().toUpperCase();
+      classCounts.set(key, (classCounts.get(key) ?? 0) + 1);
+    }
+    if (row.class_s2_code) {
+      const key = row.class_s2_code.trim().toUpperCase();
       classCounts.set(key, (classCounts.get(key) ?? 0) + 1);
     }
 

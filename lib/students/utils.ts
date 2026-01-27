@@ -3,7 +3,6 @@ import type { EditFormState, StudentRow } from "./types";
 export const EMPTY_FORM: EditFormState = {
   first_name: "",
   last_name: "",
-  class_code: "",
   note: "",
   gender: "",
   arrival_date: "",
@@ -13,6 +12,8 @@ export const EMPTY_FORM: EditFormState = {
   is_au_pair: false,
   left_early: false,
   season_id: "",
+  class_offering_s1_id: "",
+  class_offering_s2_id: "",
   pre_registration: false,
   paid_150: false,
   paid_total: false,
@@ -73,7 +74,6 @@ export function buildEditForm(student: StudentRow | null): EditFormState {
   return {
     first_name: student.first_name ?? "",
     last_name: student.last_name ?? "",
-    class_code: student.class_code ?? "",
     note: student.note ?? "",
     gender: student.gender ?? "",
     arrival_date: toInputDate(student.arrival_date),
@@ -83,6 +83,8 @@ export function buildEditForm(student: StudentRow | null): EditFormState {
     is_au_pair: Boolean(student.is_au_pair),
     left_early: Boolean(student.left_early),
     season_id: student.season_id ?? "",
+    class_offering_s1_id: student.class_s1_id ?? "",
+    class_offering_s2_id: student.class_s2_id ?? "",
     pre_registration: Boolean(student.pre_registration),
     paid_150: student.paid_150 === true,
     paid_total: Boolean(student.paid_total),

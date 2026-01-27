@@ -1,10 +1,13 @@
 "use client";
 
 import { memo, useState } from "react";
+import type { LevelRow, TeacherRow, TimeSlotRow } from "@/lib/flce/referenceTypes";
 
 type FiltersState = {
   gender: "" | "M" | "F" | "X";
-  classCode: string;
+  teacherId: string;
+  levelId: string;
+  timeSlotId: string;
   birthPlace: string;
   isAuPair: "" | "true" | "false";
   preRegistration: "" | "true" | "false";
@@ -18,12 +21,18 @@ function StudentFiltersBase({
   visible,
   onChange,
   onReset,
+  teachers,
+  levels,
+  timeSlots,
 }: {
   filters: FiltersState;
   total: number;
   visible: number;
   onChange: (next: FiltersState) => void;
   onReset: () => void;
+  teachers: TeacherRow[];
+  levels: LevelRow[];
+  timeSlots: TimeSlotRow[];
 }) {
   const update = (patch: Partial<FiltersState>) => {
     onChange({ ...filters, ...patch });
@@ -74,13 +83,51 @@ function StudentFiltersBase({
           </label>
 
           <label className="text-xs font-semibold text-slate-600">
-            Classe
-            <input
+            Professeur
+            <select
               className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={filters.classCode}
-              onChange={(e) => update({ classCode: e.target.value })}
-              placeholder="Ex: A1"
-            />
+              value={filters.teacherId}
+              onChange={(e) => update({ teacherId: e.target.value })}
+            >
+              <option value="">Tous</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.code} {teacher.full_name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-xs font-semibold text-slate-600">
+            Niveau
+            <select
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+              value={filters.levelId}
+              onChange={(e) => update({ levelId: e.target.value })}
+            >
+              <option value="">Tous</option>
+              {levels.map((level) => (
+                <option key={level.id} value={level.id}>
+                  {level.code}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-xs font-semibold text-slate-600">
+            Horaire
+            <select
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+              value={filters.timeSlotId}
+              onChange={(e) => update({ timeSlotId: e.target.value })}
+            >
+              <option value="">Tous</option>
+              {timeSlots.map((slot) => (
+                <option key={slot.id} value={slot.id}>
+                  {slot.label}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="text-xs font-semibold text-slate-600">

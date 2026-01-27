@@ -14,7 +14,10 @@ export type StudentRow = {
   last_name: string;
   first_name: string;
 
-  class_code: string | null;
+  class_s1_id?: string | null;
+  class_s2_id?: string | null;
+  class_s1_code?: string | null;
+  class_s2_code?: string | null;
   note: string | null;
 
   gender: "M" | "F" | "X" | null;
@@ -46,7 +49,6 @@ export type SortState = { key: SortKey; direction: "asc" | "desc" } | null;
 export type EditFormState = {
   first_name: string;
   last_name: string;
-  class_code: string;
   note: string;
   gender: "M" | "F" | "X" | "";
   arrival_date: string;
@@ -56,6 +58,8 @@ export type EditFormState = {
   is_au_pair: boolean;
   left_early: boolean;
   season_id: string;
+  class_offering_s1_id: string;
+  class_offering_s2_id: string;
   pre_registration: boolean;
   paid_150: boolean;
   paid_total: boolean;

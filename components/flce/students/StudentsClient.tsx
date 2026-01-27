@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/browser";
 import type { EditFormState, SortKey, SortState, StudentRow, Tab } from "@/lib/students/types";
 import type { SeasonRow } from "@/lib/seasons/types";
+import type { ClassOfferingRow, ReferenceData } from "@/lib/flce/referenceTypes";
 import {
   buildEditForm,
   deriveRecordKind,
@@ -18,9 +19,13 @@ import { StudentFilters } from "./ui/StudentFilters";
 import { StudentEditModal, StudentCreateModal, ConfirmDeleteModal } from "./ui/StudentModals";
 import { TabButton } from "./ui/TabButton";
 
+type SupabaseWriteResult = { error: { message?: string } | null };
+
 type FiltersState = {
   gender: "" | "M" | "F" | "X";
-  classCode: string;
+  teacherId: string;
+  levelId: string;
+  timeSlotId: string;
   birthPlace: string;
   isAuPair: "" | "true" | "false";
   preRegistration: "" | "true" | "false";
@@ -30,7 +35,9 @@ type FiltersState = {
 
 const DEFAULT_FILTERS: FiltersState = {
   gender: "",
-  classCode: "",
+  teacherId: "",
+  levelId: "",
+  timeSlotId: "",
   birthPlace: "",
   isAuPair: "",
   preRegistration: "",
@@ -42,10 +49,12 @@ export default function StudentsClient({
   initialStudents,
   selectedSeasonId,
   seasons,
+  referenceData,
 }: {
   initialStudents: StudentRow[];
   selectedSeasonId: string | null;
   seasons: SeasonRow[];
+  referenceData: ReferenceData;
 }) {
   const [students, setStudents] = useState<StudentRow[]>(initialStudents);
   const [tab, setTab] = useState<Tab>("ENROLLED");
@@ -91,13 +100,52 @@ export default function StudentsClient({
     return students.filter((s) => s.record_kind === tab);
   }, [students, tab]);
 
+  const { classOfferings, teachers, levels, timeSlots } = referenceData;
+  const offeringsById = useMemo(
+    () => new Map(classOfferings.map((offering) => [offering.id, offering])),
+    [classOfferings]
+  );
+  const levelById = useMemo(() => new Map(levels.map((level) => [level.id, level])), [levels]);
+  const teacherById = useMemo(
+    () => new Map(teachers.map((teacher) => [teacher.id, teacher])),
+    [teachers]
+  );
+  const slotById = useMemo(
+    () => new Map(timeSlots.map((slot) => [slot.id, slot])),
+    [timeSlots]
+  );
+
+  const formatOfferingLabel = useCallback(
+    (offering: ClassOfferingRow | undefined) => {
+      if (!offering) return null;
+      if (offering.code) return offering.code;
+      const level = offering.level_id ? levelById.get(offering.level_id) : null;
+      const teacher = offering.teacher_id ? teacherById.get(offering.teacher_id) : null;
+      const slot = offering.time_slot_id ? slotById.get(offering.time_slot_id) : null;
+      const parts = [level?.code, slot?.label, teacher?.code ?? teacher?.full_name].filter(Boolean);
+      return parts.length > 0 ? parts.join(" • ") : null;
+    },
+    [levelById, slotById, teacherById]
+  );
+
   const filteredActive = useMemo(() => {
     return active.filter((student) => {
       if (filters.gender && student.gender !== filters.gender) return false;
 
-      if (filters.classCode) {
-        const needle = filters.classCode.trim().toLowerCase();
-        if (!student.class_code?.toLowerCase().includes(needle)) return false;
+      if (filters.teacherId || filters.levelId || filters.timeSlotId) {
+        const offeringIds = [student.class_s1_id, student.class_s2_id].filter(
+          (id): id is string => Boolean(id)
+        );
+        const matches = offeringIds.some((id) => {
+          const offering = offeringsById.get(id);
+          if (!offering) return false;
+          if (filters.teacherId && offering.teacher_id !== filters.teacherId) return false;
+          if (filters.levelId && offering.level_id !== filters.levelId) return false;
+          if (filters.timeSlotId && offering.time_slot_id !== filters.timeSlotId) return false;
+          return true;
+        });
+        if (!matches && offeringIds.length > 0) return false;
+        if (!matches && offeringIds.length === 0) return false;
       }
 
       if (filters.birthPlace) {
@@ -131,7 +179,7 @@ export default function StudentsClient({
 
       return true;
     });
-  }, [active, filters]);
+  }, [active, filters, offeringsById]);
 
   const sortedActive = useMemo(() => {
     if (!sortState) return filteredActive;
@@ -210,7 +258,6 @@ export default function StudentsClient({
     const payload = {
       first_name: createForm.first_name.trim(),
       last_name: createForm.last_name.trim(),
-      class_code: createForm.class_code.trim() || null,
       note: createForm.note.trim() || null,
       gender: createForm.gender || null,
       arrival_date: createForm.arrival_date || null,
@@ -257,9 +304,67 @@ export default function StudentsClient({
       }
     }
 
-    setStudents((prev) => [created as StudentRow, ...prev]);
+    const s1Label = createForm.class_offering_s1_id
+      ? formatOfferingLabel(offeringsById.get(createForm.class_offering_s1_id))
+      : null;
+    const s2Label = createForm.class_offering_s2_id
+      ? formatOfferingLabel(offeringsById.get(createForm.class_offering_s2_id))
+      : null;
+
+    const nextStudent: StudentRow = {
+      ...(created as StudentRow),
+      class_s1_id: createForm.class_offering_s1_id || null,
+      class_s2_id: createForm.class_offering_s2_id || null,
+      class_s1_code: s1Label,
+      class_s2_code: s2Label,
+    };
+
+    const enrollments: Array<PromiseLike<SupabaseWriteResult>> = [];
+    if (createForm.class_offering_s1_id) {
+      enrollments.push(
+        supabase
+          .from("student_class_enrollments")
+          .upsert(
+            {
+              student_id: created.id,
+              class_offering_id: createForm.class_offering_s1_id,
+              semester: 1,
+            },
+            { onConflict: "student_id,semester" }
+          )
+      );
+    }
+    if (createForm.class_offering_s2_id) {
+      enrollments.push(
+        supabase
+          .from("student_class_enrollments")
+          .upsert(
+            {
+              student_id: created.id,
+              class_offering_id: createForm.class_offering_s2_id,
+              semester: 2,
+            },
+            { onConflict: "student_id,semester" }
+          )
+      );
+    }
+    if (enrollments.length > 0) {
+      const results = await Promise.all(enrollments);
+      const enrollmentError = results.find((result) => result?.error);
+      if (enrollmentError?.error) {
+        setError(enrollmentError.error.message ?? "Erreur enrollment.");
+        return;
+      }
+    }
+
+    setStudents((prev) => [nextStudent, ...prev]);
     setCreateOpen(false);
-  }, [createForm, isDossierNumberTaken]);
+  }, [
+    createForm,
+    formatOfferingLabel,
+    offeringsById,
+    isDossierNumberTaken,
+  ]);
 
   // --- UPDATE ---
   const saveEditingStudent = useCallback(async () => {
@@ -290,7 +395,6 @@ export default function StudentsClient({
     const payload = {
       first_name: editForm.first_name.trim(),
       last_name: editForm.last_name.trim(),
-      class_code: editForm.class_code.trim() || null,
       note: editForm.note.trim() || null,
       gender: editForm.gender || null,
       arrival_date: editForm.arrival_date || null,
@@ -344,6 +448,67 @@ export default function StudentsClient({
       }
     }
 
+    const enrollmentOps: Array<PromiseLike<SupabaseWriteResult>> = [];
+    if (editForm.class_offering_s1_id) {
+      enrollmentOps.push(
+        supabase
+          .from("student_class_enrollments")
+          .upsert(
+            {
+              student_id: editingStudent.id,
+              class_offering_id: editForm.class_offering_s1_id,
+              semester: 1,
+            },
+            { onConflict: "student_id,semester" }
+          )
+      );
+    } else {
+      enrollmentOps.push(
+        supabase
+          .from("student_class_enrollments")
+          .delete()
+          .eq("student_id", editingStudent.id)
+          .eq("semester", 1)
+      );
+    }
+
+    if (editForm.class_offering_s2_id) {
+      enrollmentOps.push(
+        supabase
+          .from("student_class_enrollments")
+          .upsert(
+            {
+              student_id: editingStudent.id,
+              class_offering_id: editForm.class_offering_s2_id,
+              semester: 2,
+            },
+            { onConflict: "student_id,semester" }
+          )
+      );
+    } else {
+      enrollmentOps.push(
+        supabase
+          .from("student_class_enrollments")
+          .delete()
+          .eq("student_id", editingStudent.id)
+          .eq("semester", 2)
+      );
+    }
+
+    const enrollmentResults = await Promise.all(enrollmentOps);
+    const enrollmentError = enrollmentResults.find((result) => result?.error);
+    if (enrollmentError?.error) {
+      setError(enrollmentError.error.message ?? "Erreur enrollment.");
+      return;
+    }
+
+    const s1Label = editForm.class_offering_s1_id
+      ? formatOfferingLabel(offeringsById.get(editForm.class_offering_s1_id))
+      : null;
+    const s2Label = editForm.class_offering_s2_id
+      ? formatOfferingLabel(offeringsById.get(editForm.class_offering_s2_id))
+      : null;
+
     // update local list
     setStudents((prev) =>
       prev.map((s) =>
@@ -352,13 +517,23 @@ export default function StudentsClient({
               ...s,
               ...payload,
               record_kind: recordKind,
+              class_s1_id: editForm.class_offering_s1_id || null,
+              class_s2_id: editForm.class_offering_s2_id || null,
+              class_s1_code: s1Label,
+              class_s2_code: s2Label,
             } as StudentRow)
           : s
       )
     );
 
     setEditingStudent(null);
-  }, [editForm, editingStudent, isDossierNumberTaken]);
+  }, [
+    editForm,
+    editingStudent,
+    formatOfferingLabel,
+    offeringsById,
+    isDossierNumberTaken,
+  ]);
 
   // --- DELETE ---
   const confirmDeleteStudent = useCallback(async () => {
@@ -378,9 +553,9 @@ export default function StudentsClient({
   }, [deleteCandidate, editingStudent]);
 
   const emptyColSpan = useMemo(() => {
-    if (tab === "ENROLLED") return 16;
-    if (tab === "PRE_REGISTERED" || tab === "LEFT") return 15;
-    return 12;
+    if (tab === "ENROLLED") return 17;
+    if (tab === "PRE_REGISTERED" || tab === "LEFT") return 16;
+    return 13;
   }, [tab]);
 
   return (
@@ -406,6 +581,9 @@ export default function StudentsClient({
         visible={sortedActive.length}
         onChange={setFilters}
         onReset={() => setFilters(DEFAULT_FILTERS)}
+        teachers={teachers}
+        levels={levels}
+        timeSlots={timeSlots}
       />
 
       <StudentsTable
@@ -424,6 +602,10 @@ export default function StudentsClient({
           form={editForm}
           errors={editErrors}
           seasons={seasons}
+          classOfferings={classOfferings}
+          teachers={teachers}
+          levels={levels}
+          timeSlots={timeSlots}
           onChange={(patch) => setEditForm((prev) => ({ ...prev, ...patch }))}
           onClose={() => setEditingStudent(null)}
           onSave={saveEditingStudent}
@@ -436,6 +618,10 @@ export default function StudentsClient({
           form={createForm}
           errors={createErrors}
           seasons={seasons}
+          classOfferings={classOfferings}
+          teachers={teachers}
+          levels={levels}
+          timeSlots={timeSlots}
           onChange={(patch) => setCreateForm((prev) => ({ ...prev, ...patch }))}
           onClose={() => setCreateOpen(false)}
           onSave={createStudent}

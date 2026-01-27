@@ -3,6 +3,12 @@
 import Modal from "@/components/ui/Modal";
 import type { EditFormState, StudentRow } from "@/lib/students/types";
 import type { SeasonRow } from "@/lib/seasons/types";
+import type {
+  ClassOfferingRow,
+  LevelRow,
+  TeacherRow,
+  TimeSlotRow,
+} from "@/lib/flce/referenceTypes";
 import { deriveRecordKind } from "@/lib/students/utils";
 
 const fieldBase =
@@ -19,10 +25,18 @@ function StudentFormFields({
   form,
   onChange,
   seasons,
+  classOfferings,
+  teachers,
+  levels,
+  timeSlots,
 }: {
   form: EditFormState;
   onChange: (patch: FormPatch) => void;
   seasons: SeasonRow[];
+  classOfferings: ClassOfferingRow[];
+  teachers: TeacherRow[];
+  levels: LevelRow[];
+  timeSlots: TimeSlotRow[];
 }) {
   const updatePaymentState = (patch: FormPatch) => {
     const next: EditFormState = { ...form, ...patch };
@@ -47,6 +61,26 @@ function StudentFormFields({
 
     onChange(next);
   };
+
+  const levelById = new Map(levels.map((level) => [level.id, level]));
+  const teacherById = new Map(teachers.map((teacher) => [teacher.id, teacher]));
+  const slotById = new Map(timeSlots.map((slot) => [slot.id, slot]));
+
+  const formatOfferingLabel = (offering: ClassOfferingRow) => {
+    if (offering.code) return offering.code;
+    const level = offering.level_id ? levelById.get(offering.level_id) : null;
+    const teacher = offering.teacher_id ? teacherById.get(offering.teacher_id) : null;
+    const slot = offering.time_slot_id ? slotById.get(offering.time_slot_id) : null;
+    const parts = [
+      level?.code,
+      slot?.label,
+      teacher?.code ?? teacher?.full_name,
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(" • ") : "Classe";
+  };
+
+  const offeringsS1 = classOfferings.filter((offering) => offering.semester === 1);
+  const offeringsS2 = classOfferings.filter((offering) => offering.semester === 2);
 
   return (
     <div className="space-y-3">
@@ -84,16 +118,9 @@ function StudentFormFields({
         </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className={labelBase}>
-          Classe
-          <input
-            className={fieldBase}
-            value={form.class_code}
-            onChange={(e) => onChange({ class_code: e.target.value })}
-          />
-        </label>
-        <label className={labelBase}>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <label className={labelBase}>
           Saison
           <select
             className={fieldBase}
@@ -108,7 +135,39 @@ function StudentFormFields({
             ))}
           </select>
         </label>
+        <label className={labelBase}>
+          Classe semestre 1
+          <select
+            className={fieldBase}
+            value={form.class_offering_s1_id}
+            onChange={(e) => onChange({ class_offering_s1_id: e.target.value })}
+          >
+            <option value="">—</option>
+            {offeringsS1.map((offering) => (
+              <option key={offering.id} value={offering.id}>
+                {formatOfferingLabel(offering)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={labelBase}>
+          Classe semestre 2
+          <select
+            className={fieldBase}
+            value={form.class_offering_s2_id}
+            onChange={(e) => onChange({ class_offering_s2_id: e.target.value })}
+          >
+            <option value="">—</option>
+            {offeringsS2.map((offering) => (
+              <option key={offering.id} value={offering.id}>
+                {formatOfferingLabel(offering)}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
+
+
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className={labelBase}>
@@ -295,6 +354,10 @@ export function StudentEditModal({
   form,
   errors,
   seasons,
+  classOfferings,
+  teachers,
+  levels,
+  timeSlots,
   onChange,
   onClose,
   onSave,
@@ -304,6 +367,10 @@ export function StudentEditModal({
   form: EditFormState;
   errors: string[];
   seasons: SeasonRow[];
+  classOfferings: ClassOfferingRow[];
+  teachers: TeacherRow[];
+  levels: LevelRow[];
+  timeSlots: TimeSlotRow[];
   onChange: (patch: FormPatch) => void;
   onClose: () => void;
   onSave: () => void | Promise<void>;
@@ -313,16 +380,21 @@ export function StudentEditModal({
     <Modal onClose={onClose}>
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className={sectionTitle}>Modifier</h2>
-          <p className="text-lg text-slate-600">
-            {student.first_name} {student.last_name}
-          </p>
+          <h2 className={sectionTitle}>{student.first_name} {student.last_name}</h2>
           <div />
         </div>
 
         <ErrorList errors={errors} />
 
-        <StudentFormFields form={form} onChange={onChange} seasons={seasons} />
+        <StudentFormFields
+          form={form}
+          onChange={onChange}
+          seasons={seasons}
+          classOfferings={classOfferings}
+          teachers={teachers}
+          levels={levels}
+          timeSlots={timeSlots}
+        />
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
           <button
@@ -345,6 +417,10 @@ export function StudentCreateModal({
   form,
   errors,
   seasons,
+  classOfferings,
+  teachers,
+  levels,
+  timeSlots,
   onChange,
   onClose,
   onSave,
@@ -352,6 +428,10 @@ export function StudentCreateModal({
   form: EditFormState;
   errors: string[];
   seasons: SeasonRow[];
+  classOfferings: ClassOfferingRow[];
+  teachers: TeacherRow[];
+  levels: LevelRow[];
+  timeSlots: TimeSlotRow[];
   onChange: (patch: FormPatch) => void;
   onClose: () => void;
   onSave: () => void | Promise<void>;
@@ -371,7 +451,15 @@ export function StudentCreateModal({
 
         <ErrorList errors={errors} />
 
-        <StudentFormFields form={form} onChange={onChange} seasons={seasons} />
+        <StudentFormFields
+          form={form}
+          onChange={onChange}
+          seasons={seasons}
+          classOfferings={classOfferings}
+          teachers={teachers}
+          levels={levels}
+          timeSlots={timeSlots}
+        />
 
         <div className="flex justify-end pt-2">
           <button className="btn-primary" type="button" onClick={onSave}>

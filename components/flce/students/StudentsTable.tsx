@@ -49,7 +49,8 @@ function StudentsTableBase({
             <th className="px-4 py-3 text-left">
               <SortHeader label="Prénom" indicator={sortLabel("first_name")} onClick={() => onSort("first_name")} />
             </th>
-            <th className="px-4 py-3 text-left">Classe</th>
+            <th className="px-4 py-3 text-left">Classe S1</th>
+            <th className="px-4 py-3 text-left">Classe S2</th>
             <th className="px-4 py-3 text-left">Note</th>
             <th className="px-4 py-3 text-left">Arrivée</th>
             <th className="px-4 py-3 text-left">Départ</th>
@@ -82,7 +83,8 @@ function StudentsTableBase({
                 <td className="px-4 py-3">{formatGender(student.gender)}</td>
                 <td className="px-4 py-3">{student.last_name}</td>
                 <td className="px-4 py-3">{student.first_name}</td>
-                <td className="px-4 py-3">{student.class_code ?? "—"}</td>
+                <td className="px-4 py-3">{student.class_s1_code ?? "—"}</td>
+                <td className="px-4 py-3">{student.class_s2_code ?? "—"}</td>
                 <td className="px-4 py-3">{student.note ?? "—"}</td>
                 <td className="px-4 py-3">{formatDate(student.arrival_date)}</td>
                 <td className="px-4 py-3">{formatDate(student.departure_date)}</td>

@@ -5,7 +5,13 @@ import { redirect } from "next/navigation";
 import StudentsClient from "@/components/flce/students/StudentsClient";
 import { getViewerServer } from "@/lib/auth/viewer.server";
 import { getSeasonStateServer } from "@/lib/seasons/getSeasonState.server";
-import { fetchStudentsBySeasonServer } from "@/lib/students/studentsRepo.server";
+import { fetchStudentsServer } from "@/lib/flce/studentsRepo.server";
+import {
+  fetchClassOfferingsServer,
+  fetchLevelsServer,
+  fetchTeachersServer,
+  fetchTimeSlotsServer,
+} from "@/lib/flce/referenceRepo.server";
 
 export default async function FlceStudentsPage() {
   const { user } = await getViewerServer();
@@ -14,7 +20,13 @@ export default async function FlceStudentsPage() {
   const seasonState = await getSeasonStateServer();
   const seasonId = seasonState.selectedId ?? null;
 
-  const students = await fetchStudentsBySeasonServer(seasonId);
+  const [students, teachers, levels, timeSlots, classOfferings] = await Promise.all([
+    fetchStudentsServer({ seasonId }),
+    fetchTeachersServer(),
+    fetchLevelsServer(),
+    fetchTimeSlotsServer(),
+    fetchClassOfferingsServer({ seasonId }),
+  ]);
 
   return (
     <PageShell>
@@ -23,6 +35,12 @@ export default async function FlceStudentsPage() {
         initialStudents={students}
         selectedSeasonId={seasonId}
         seasons={seasonState.seasons}
+        referenceData={{
+          teachers,
+          levels,
+          timeSlots,
+          classOfferings,
+        }}
       />
     </PageShell>
   );
