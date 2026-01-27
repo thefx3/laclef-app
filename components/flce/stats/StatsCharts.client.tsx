@@ -168,8 +168,8 @@ export default function StatsCharts({ data }: { data: StatsDashboardData }) {
                 <YAxis allowDecimals={false} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Legend />
-                <Bar dataKey="M" stackId="gender" fill="#F59E0B" name="Mr" />
-                <Bar dataKey="F" stackId="gender" fill="#38BDF8" name="Mrs" />
+                <Bar dataKey="M" stackId="gender" fill="#F59E0B" name="Homme" />
+                <Bar dataKey="F" stackId="gender" fill="#38BDF8" name="Femme" />
                 <Bar dataKey="X" stackId="gender" fill="#A78BFA" name="X" />
                 <Bar dataKey="ND" stackId="gender" fill="#CBD5F5" name="ND" />
               </BarChart>
