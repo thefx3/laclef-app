@@ -352,6 +352,7 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
                       <PostList
                         posts={postsToShow}
                         remaining={isDayMode ? 0 : remaining}
+                        columns={isDayMode ? 2 : 1}
                         onSelectPost={setSelectedPost}
                         onShowMore={() => setExpandedDay(day)}
                         showMeta

@@ -50,7 +50,7 @@ export default function NavBar() {
         <span>La CLEF</span>
       </Link>
 
-      <nav className="flex flex-col gap-2 px-4 pb-6">
+      <nav className="flex flex-col gap-3 px-4 pb-6">
         {links.map((link) => {
           const isBaseRoute = links.some(
             (other) => other.href !== link.href && other.href.startsWith(`${link.href}/`)

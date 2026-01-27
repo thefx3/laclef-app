@@ -9,19 +9,26 @@ export default function PostList({
   remaining = 0,
   onShowMore,
   showMeta = false,
+  columns = 1,
 }: {
   posts: Post[];
   onSelectPost: (post: Post) => void;
   remaining?: number;
   onShowMore?: () => void;
   showMeta?: boolean;
+  columns?: 1 | 2;
 }) {
   if (posts.length === 0) {
     return <p className="text-sm text-[var(--muted-subtle)]">Aucun évènement.</p>;
   }
 
+  const listClass =
+    columns === 2
+      ? "px-4 py-2 grid grid-cols-2 gap-2"
+      : "px-4 py-2 space-y-2";
+
   return (
-    <ul className="px-4 py-2 space-y-2">
+    <ul className={listClass}>
       {posts.map((p) => (
         <li
           key={p.id}
@@ -55,7 +62,7 @@ export default function PostList({
         </li>
       ))}
       {remaining > 0 && onShowMore ? (
-        <li>
+        <li className={columns === 2 ? "col-span-2" : undefined}>
           <button
             type="button"
             onClick={onShowMore}

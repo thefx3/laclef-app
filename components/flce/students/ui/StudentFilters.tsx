@@ -28,7 +28,7 @@ function StudentFiltersBase({
   const update = (patch: Partial<FiltersState>) => {
     onChange({ ...filters, ...patch });
   };
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4">
