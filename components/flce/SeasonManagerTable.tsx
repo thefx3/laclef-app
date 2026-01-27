@@ -129,10 +129,8 @@ export default function SeasonManagerTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-md uppercase tracking-[0.25em] font-semibold text-slate-800">
-          Saisons
-        </h2>
+      <div className="flex flex-wrap items-center">
+
         {isAdmin ? (
           <button className={buttonPrimary} onClick={() => setCreateOpen(true)}>
             Ajouter une saison
