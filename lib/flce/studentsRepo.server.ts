@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { StudentRow } from "@/lib/students/types";
+import { StudentDocRow } from "./documents/documentTypes";
 
 export async function fetchStudentsServer(params?: { seasonId?: string | null }) {
   const supabase = await createClient();
@@ -44,4 +45,20 @@ export async function fetchRecentEnrolledStudentsServer(params?: {
     StudentRow,
     "id" | "first_name" | "last_name" | "created_at" | "class_s1_code" | "class_s2_code" | "record_kind"
   >[];
+}
+
+export async function fetchStudentsForDocsServer(seasonId?: string | null): Promise<StudentDocRow[]> {
+  const supabase = await createClient();
+
+  let q = supabase
+    .from("students_with_classes")
+    .select("id,first_name,last_name,gender,arrival_date,departure_date,season_id,class_s1_code,class_s2_code")
+    .order("created_at", { ascending: false });
+
+  if (seasonId) q = q.eq("season_id", seasonId);
+
+  const { data, error } = await q;
+  if (error) throw error;
+
+  return (data ?? []) as StudentDocRow[];
 }
