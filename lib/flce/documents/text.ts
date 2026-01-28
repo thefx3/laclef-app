@@ -40,6 +40,41 @@ export function resolveLevel(student: StudentDocRow, draft: AssiduiteDraft) {
   return getStudentLevelForSemester(student, getSemester(draft));
 }
 
+function buildTokenContext(params: {
+  template: DocumentTemplateId;
+  student: StudentDocRow;
+  seasonLabel: string;
+  draft: AnyDraft;
+}) {
+  const { template, student, seasonLabel, draft } = params;
+  const civ = civilite(student.gender);
+  const semester = template === "assiduite" ? getSemester(draft) : undefined;
+  const level =
+    template === "assiduite"
+      ? resolveLevel(student, draft as AssiduiteDraft)
+      : student.class_s1_code ?? student.class_s2_code ?? "—";
+
+  return {
+    first_name: student.first_name,
+    last_name: student.last_name,
+    last_name_upper: student.last_name.toUpperCase(),
+    full_name: `${student.first_name} ${student.last_name}`,
+    civ,
+    season: seasonLabel,
+    arrival_date: frDateLong(student.arrival_date),
+    departure_date: frDateLong(student.departure_date),
+    semester: semester ? String(semester) : "",
+    level,
+  };
+}
+
+function interpolateTokens(text: string, context: Record<string, string>) {
+  return text.replace(/{{\s*([a-z_]+)\s*}}/gi, (match, key) => {
+    const k = String(key).toLowerCase();
+    return context[k] ?? match;
+  });
+}
+
 export function buildDefaultParagraphs(params: {
   template: DocumentTemplateId;
   student: StudentDocRow;
@@ -115,7 +150,11 @@ export function resolveDocumentText(params: {
   const { template, student, seasonLabel, draft } = params;
   const defaultParagraphs = buildDefaultParagraphs({ template, student, seasonLabel, draft });
   const bodyText = (draft.bodyText ?? "").toString();
-  const paragraphs = bodyText.trim().length > 0 ? bodyTextToParagraphs(bodyText) : defaultParagraphs;
+  const context = buildTokenContext({ template, student, seasonLabel, draft });
+  const paragraphs =
+    bodyText.trim().length > 0
+      ? bodyTextToParagraphs(bodyText).map((p) => interpolateTokens(p, context))
+      : defaultParagraphs;
 
   const footerLine = (draft.footerText ?? "").toString().trim() || buildFooterText(draft);
 

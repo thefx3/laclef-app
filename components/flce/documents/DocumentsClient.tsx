@@ -43,15 +43,18 @@ export default function DocumentsClient({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const studentsById = useMemo(
+    () => new Map(initialStudents.map((s) => [s.id, s])),
+    [initialStudents]
+  );
   const students = useMemo(
     () => filterStudents(initialStudents, seasonId, query),
     [initialStudents, seasonId, query]
   );
 
   const selectedStudents = useMemo(() => {
-    const set = new Set(selectedIds);
-    return students.filter((s) => set.has(s.id));
-  }, [students, selectedIds]);
+    return selectedIds.map((id) => studentsById.get(id)).filter(Boolean) as StudentDocRow[];
+  }, [selectedIds, studentsById]);
 
   const previewStudent = selectedStudents[0] ?? null;
   const semester = getSemester(draft);

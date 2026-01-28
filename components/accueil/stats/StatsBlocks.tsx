@@ -24,7 +24,7 @@ type StatCardProps = {
 };
 
 const cardBase = "rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm";
-const chartWrapBase = "min-h-[220px] w-full min-w-0";
+const chartWrapBase = "h-[220px] w-full min-w-0";
 const cardTitle = "text-sm font-semibold text-slate-900";
 const cardSubtitle = "text-xs text-slate-500";
 const tooltipStyle = {
@@ -99,7 +99,7 @@ export function TypeBreakdown({
         <span className="text-xs font-semibold text-slate-600">{total} posts</span>
       </div>
 
-      <div className={`mt-4 relative ${chartWrapBase}`}>
+      <div className="mt-4 relative h-[250px] w-full min-w-0">
         {chartData.length === 0 ? (
           <p className="text-sm text-slate-500">Aucune donnée disponible.</p>
         ) : (

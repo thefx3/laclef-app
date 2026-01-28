@@ -101,6 +101,9 @@ export default function DocumentPreview({
             Réinitialiser le texte
           </button>
         </label>
+        <p className="text-[11px] text-slate-500">
+          Tokens disponibles : {"{{first_name}}"} {"{{last_name}}"} {"{{last_name_upper}}"} {"{{full_name}}"} {"{{civ}}"} {"{{season}}"} {"{{arrival_date}}"} {"{{departure_date}}"} {"{{semester}}"} {"{{level}}"}
+        </p>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-800 space-y-3">
