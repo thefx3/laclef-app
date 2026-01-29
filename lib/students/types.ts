@@ -40,10 +40,11 @@ export type StudentRow = {
   au_pair_details: AuPairDetail[] | AuPairDetail | null;
 
   created_at: string;
+  updated_at?: string | null;
 };
 
 export type Tab = "ENROLLED" | "PRE_REGISTERED" | "LEAD" | "LEFT";
-export type SortKey = "last_name" | "first_name";
+export type SortKey = "last_name" | "first_name" | "updated_at";
 export type SortState = { key: SortKey; direction: "asc" | "desc" } | null;
 
 export type EditFormState = {

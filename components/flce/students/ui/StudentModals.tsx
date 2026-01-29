@@ -319,11 +319,11 @@ function StudentFormFields({
       <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
         Statut calculé:{" "}
         <span className="font-semibold">
-          {deriveRecordKind(form.pre_registration, form.paid_total) === "ENROLLED"
+          {deriveRecordKind(form.pre_registration, form.paid_150, form.paid_total) === "ENROLLED"
             ? "Inscrit"
-            : deriveRecordKind(form.pre_registration, form.paid_total) === "PRE_REGISTERED"
-            ? "Pré-inscrit"
-            : "Lead"}
+            : deriveRecordKind(form.pre_registration, form.paid_150, form.paid_total) === "PRE_REGISTERED"
+              ? "Pré-inscrit"
+              : "Lead"}
         </span>
       </div>
     </div>

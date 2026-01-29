@@ -10,7 +10,7 @@ type HeaderProps = {
 export default function Header({ email, role }: HeaderProps) {
 
     return (
-        <header className="w-full flex items-center justify-between p-4 bg-white">
+        <header className="w-full flex items-center justify-between p-4 bg-white/60 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/50">
         {/* Gauche */}
         <div className="flex items-center">
           <MobileNav />

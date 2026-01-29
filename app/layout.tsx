@@ -11,7 +11,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="antialiased overflow-y-scroll">{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

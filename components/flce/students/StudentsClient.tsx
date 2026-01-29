@@ -8,6 +8,7 @@ import type { ClassOfferingRow, ReferenceData } from "@/lib/flce/referenceTypes"
 import {
   buildEditForm,
   deriveRecordKind,
+  deriveRecordKindForDb,
   EMPTY_FORM,
   getAge,
   hasDepartureBeforeArrival,
@@ -88,17 +89,38 @@ export default function StudentsClient({
     setDeleteCandidate(null);
   }, [initialStudents, selectedSeasonId]);
 
+  const resolveRecordKind = useCallback(
+    (student: StudentRow): Tab => {
+      if (student.record_kind === "LEFT") return "LEFT";
+      return deriveRecordKind(
+        Boolean(student.pre_registration),
+        Boolean(student.paid_150),
+        Boolean(student.paid_total)
+      ) as Tab;
+    },
+    []
+  );
+
   // Tabs counts
   const counts = useMemo(() => {
     const byKind = { ENROLLED: 0, PRE_REGISTERED: 0, LEAD: 0, LEFT: 0 } as Record<Tab, number>;
-    for (const s of students) byKind[s.record_kind as Tab] += 1;
+    for (const s of students) {
+      const kind = resolveRecordKind(s);
+      byKind[kind] += 1;
+    }
     return byKind;
-  }, [students]);
+  }, [students, resolveRecordKind]);
 
   // Active list for current tab
   const active = useMemo(() => {
-    return students.filter((s) => s.record_kind === tab);
-  }, [students, tab]);
+    return students
+      .map((s) => {
+        const kind = resolveRecordKind(s);
+        if (kind !== tab) return null;
+        return { ...s, record_kind: kind };
+      })
+      .filter(Boolean) as StudentRow[];
+  }, [students, tab, resolveRecordKind]);
 
   const { classOfferings, teachers, levels, timeSlots } = referenceData;
   const offeringsById = useMemo(
@@ -185,6 +207,13 @@ export default function StudentsClient({
     if (!sortState) return filteredActive;
     const next = [...filteredActive];
     next.sort((a, b) => {
+      if (sortState.key === "updated_at") {
+        const leftTime = new Date(a.updated_at ?? a.created_at ?? 0).getTime();
+        const rightTime = new Date(b.updated_at ?? b.created_at ?? 0).getTime();
+        const result = leftTime - rightTime;
+        return sortState.direction === "asc" ? result : -result;
+      }
+
       const left = (a[sortState.key] ?? "").toString();
       const right = (b[sortState.key] ?? "").toString();
       const result = left.localeCompare(right, "fr", { sensitivity: "base" });
@@ -252,9 +281,10 @@ export default function StudentsClient({
       return;
     }
 
-    const recordKind = deriveRecordKind(createForm.pre_registration, createForm.paid_total);
+    const recordKind = deriveRecordKindForDb(createForm.pre_registration, createForm.paid_total);
     const dossierNumber = createForm.dossier_number.trim();
 
+    const updatedAt = new Date().toISOString();
     const payload = {
       first_name: createForm.first_name.trim(),
       last_name: createForm.last_name.trim(),
@@ -272,6 +302,7 @@ export default function StudentsClient({
       paid_total: createForm.paid_total,
       dossier_number: dossierNumber || null,
       record_kind: recordKind,
+      updated_at: updatedAt,
     };
 
     const { data: created, error: insertError } = await supabase
@@ -317,6 +348,7 @@ export default function StudentsClient({
       class_s2_id: createForm.class_offering_s2_id || null,
       class_s1_code: s1Label,
       class_s2_code: s2Label,
+      updated_at: updatedAt,
     };
 
     const enrollments: Array<PromiseLike<SupabaseWriteResult>> = [];
@@ -389,9 +421,10 @@ export default function StudentsClient({
       return;
     }
 
-    const recordKind = deriveRecordKind(editForm.pre_registration, editForm.paid_total);
+    const recordKind = deriveRecordKindForDb(editForm.pre_registration, editForm.paid_total);
     const dossierNumber = editForm.dossier_number.trim();
 
+    const updatedAt = new Date().toISOString();
     const payload = {
       first_name: editForm.first_name.trim(),
       last_name: editForm.last_name.trim(),
@@ -409,6 +442,7 @@ export default function StudentsClient({
       paid_total: editForm.paid_total,
       dossier_number: dossierNumber || null,
       record_kind: recordKind,
+      updated_at: updatedAt,
     };
 
     const { error: updateError } = await supabase
@@ -521,6 +555,7 @@ export default function StudentsClient({
               class_s2_id: editForm.class_offering_s2_id || null,
               class_s1_code: s1Label,
               class_s2_code: s2Label,
+              updated_at: updatedAt,
             } as StudentRow)
           : s
       )
@@ -554,8 +589,9 @@ export default function StudentsClient({
 
   const emptyColSpan = useMemo(() => {
     if (tab === "ENROLLED") return 16;
-    if (tab === "PRE_REGISTERED" || tab === "LEFT") return 16;
-    return 13;
+    if (tab === "LEFT") return 16;
+    if (tab === "PRE_REGISTERED") return 15;
+    return 11;
   }, [tab]);
 
   return (

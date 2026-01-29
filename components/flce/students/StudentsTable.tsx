@@ -35,6 +35,8 @@ function StudentsTableBase({
     if (!sortState || sortState.key !== key) return "";
     return sortState.direction === "asc" ? "↑" : "↓";
   };
+  const showS2 = tab === "ENROLLED" || tab === "LEFT";
+  const showPaidTotal = tab !== "LEAD";
 
   return (
     <div className="rounded-xl border bg-white overflow-x-auto">
@@ -50,7 +52,7 @@ function StudentsTableBase({
               <SortHeader label="Prénom" indicator={sortLabel("first_name")} onClick={() => onSort("first_name")} />
             </th>
             <th className="px-4 py-3 text-left">Classe S1</th>
-            <th className="px-4 py-3 text-left">Classe S2</th>
+            {showS2 && <th className="px-4 py-3 text-left">Classe S2</th>}
             {tab !== "ENROLLED" && <th className="px-4 py-3 text-left">Note</th>}
             <th className="px-4 py-3 text-left">Arrivée</th>
             <th className="px-4 py-3 text-left">Départ</th>
@@ -59,8 +61,10 @@ function StudentsTableBase({
             {tab !== "LEAD" && <th className="px-4 py-3 text-left">Au pair</th>}
             <th className="px-4 py-3 text-left">Pré-inscription</th>
             <th className="px-4 py-3 text-left">150€</th>
-            <th className="px-4 py-3 text-left">Paiement total</th>
-            <th className="px-4 py-3 text-left">Statut</th>
+            {showPaidTotal && <th className="px-4 py-3 text-left">TOTAL</th>}
+            <th className="px-4 py-3 text-left">
+              <SortHeader label="Modifé" indicator={sortLabel("updated_at")} onClick={() => onSort("updated_at")} />
+            </th>
             <th className="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
@@ -84,7 +88,7 @@ function StudentsTableBase({
                 <td className="px-4 py-3">{student.last_name}</td>
                 <td className="px-4 py-3">{student.first_name}</td>
                 <td className="px-4 py-3">{student.class_s1_code ?? "—"}</td>
-                <td className="px-4 py-3">{student.class_s2_code ?? "—"}</td>
+                {showS2 && <td className="px-4 py-3">{student.class_s2_code ?? "—"}</td>}
                 {tab !== "ENROLLED" && <td className="px-4 py-3">{student.note ?? "—"}</td>}
                 <td className="px-4 py-3">{formatDate(student.arrival_date)}</td>
                 <td className="px-4 py-3">{formatDate(student.departure_date)}</td>
@@ -95,18 +99,8 @@ function StudentsTableBase({
                 <td className={cn("px-4 py-3", student.pre_registration ? "" : "text-gray-400")}>
                   {student.pre_registration ? formatYesNo(student.paid_150) : "—"}
                 </td>
-                <td className="px-4 py-3">{formatYesNo(student.paid_total)}</td>
-                <td className="px-4 py-3">
-                  {student.record_kind === "ENROLLED" ? (
-                    <span className="badge badge--green">Inscrit</span>
-                  ) : student.record_kind === "PRE_REGISTERED" ? (
-                    "Pré-inscrit"
-                  ) : student.record_kind === "LEFT" ? (
-                    "Sorti"
-                  ) : (
-                    "Lead"
-                  )}
-                </td>
+                {showPaidTotal && <td className="px-4 py-3">{formatYesNo(student.paid_total)}</td>}
+                <td className="px-4 py-3">{formatDate(student.updated_at ?? student.created_at)}</td>
                 <td className="px-4 py-3 text-right">
                   <button
                     className={cn("btn-action", "btn-action--delete")}

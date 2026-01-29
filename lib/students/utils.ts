@@ -60,7 +60,13 @@ export function formatAge(value: string | null) {
   return age === null ? "—" : String(age);
 }
 
-export function deriveRecordKind(preRegistration: boolean, paidTotal: boolean) {
+export function deriveRecordKind(preRegistration: boolean, paid150: boolean, paidTotal: boolean) {
+  if (paidTotal) return "ENROLLED";
+  if (preRegistration && paid150) return "PRE_REGISTERED";
+  return "LEAD";
+}
+
+export function deriveRecordKindForDb(preRegistration: boolean, paidTotal: boolean) {
   if (paidTotal) return "ENROLLED";
   if (preRegistration) return "PRE_REGISTERED";
   return "LEAD";
@@ -97,7 +103,7 @@ export function buildEditForm(student: StudentRow | null): EditFormState {
 
 export function validateEditForm(form: EditFormState) {
   const errors: string[] = [];
-  const recordKind = deriveRecordKind(form.pre_registration, form.paid_total);
+  const recordKind = deriveRecordKind(form.pre_registration, form.paid_150, form.paid_total);
 
   if (recordKind !== "LEAD" && form.dossier_number.trim().length === 0) {
     errors.push("Le numéro de dossier est requis pour les pré-inscrits et inscrits.");
@@ -107,9 +113,6 @@ export function validateEditForm(form: EditFormState) {
   }
   if (form.pre_registration && form.paid_total && !form.paid_150) {
     errors.push("Si paiement total + pré-inscription, alors 150€ doit être Oui.");
-  }
-  if (form.pre_registration && !form.paid_150 && !form.paid_total) {
-    errors.push("Si pré-inscription = Oui, alors 150€ doit être Oui (sauf si paiement total).");
   }
   return errors;
 }

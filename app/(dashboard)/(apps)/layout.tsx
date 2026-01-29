@@ -12,11 +12,13 @@ export default async function AppsLayout({ children }: { children: React.ReactNo
       <div className="flex h-full flex-col lg:flex-row">
         <NavBar role={role} />
         <main className="relative flex min-h-0 w-full flex-col min-w-0">
-          <div className="mx-auto w-full">
-            <Header email={user.email ?? "-"} role={role} />
-          </div>
           <div className="mx-auto w-full flex-1 overflow-y-auto">
-            {children}
+            <div className="sticky top-0 z-30">
+              <Header email={user.email ?? "-"} role={role} />
+            </div>
+            <div className="-mt-6 pt-6">
+              {children}
+            </div>
           </div>
         </main>
       </div>
