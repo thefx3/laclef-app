@@ -20,6 +20,7 @@ export default function SettingsNav() {
           <Link
             key={tab.href}
             href={tab.href}
+            prefetch={false}
             className={cn("btn-tab", isActive ?  "btn-tab--active shadow-sm" : "btn-tab--inactive")}
             aria-current={isActive ? "page" : undefined}
           >
