@@ -14,6 +14,14 @@ export const getViewerServer = cache(async () => {
   const user = userRes.user;
   if (!user) return { user: null, role: "USER" };
 
+  const metadataRole = user.app_metadata?.role;
+  if (metadataRole) {
+    const rawRole = String(metadataRole).toUpperCase();
+    const role: UserRole =
+      rawRole === "ADMIN" || rawRole === "SUPER_ADMIN" ? rawRole : "USER";
+    return { user, role };
+  }
+
   const { data: profile, error: profileErr } = await supabase
     .from("user_profiles")
     .select("role")
@@ -32,6 +40,6 @@ export const getViewerServer = cache(async () => {
 export async function requireAdmin() {
   const { user, role } = await getViewerServer();
   if (!user) redirect("/login");
-  if (role !== "ADMIN" && role !== "SUPER_ADMIN") redirect("/"); // ou /accueil
+  if (role !== "ADMIN" && role !== "SUPER_ADMIN") redirect("/");
   return { user, role };
 }

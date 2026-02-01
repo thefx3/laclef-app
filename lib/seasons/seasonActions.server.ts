@@ -1,5 +1,6 @@
 import "server-only";
 
+import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getViewerServer } from "@/lib/auth/viewer.server";
@@ -91,6 +92,7 @@ async function createSeason(formData: FormData, redirectTo: string) {
 
   if (error) throw new Error(error.message);
 
+  revalidateTag("seasons");
   redirect(redirectTo);
 }
 
@@ -119,6 +121,7 @@ async function updateSeason(formData: FormData, redirectTo: string) {
 
   if (error) throw new Error(error.message);
 
+  revalidateTag("seasons");
   redirect(redirectTo);
 }
 
@@ -130,5 +133,6 @@ async function deleteSeason(formData: FormData, redirectTo: string) {
   const { error } = await supabaseAdmin.from("seasons").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
+  revalidateTag("seasons");
   redirect(redirectTo);
 }
