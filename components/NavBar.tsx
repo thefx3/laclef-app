@@ -5,13 +5,12 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Settings } from "lucide-react";
 import icon from "@/app/icon.png";
-import { APP_NAV, APPS, type AppKey } from "@/lib/apps";
+import { APP_NAV, APPS, APP_KEYS, type AppKey } from "@/lib/apps";
 import type { UserRole } from "@/lib/users/types";
 
 function getAppKeyFromPath(pathname: string | null): AppKey {
   const seg = (pathname ?? "/").split("/")[1];
-  const appKeys = APPS.map((app) => app.key);
-  if (appKeys.includes(seg as AppKey)) return seg as AppKey;
+  if (APP_KEYS.includes(seg as AppKey)) return seg as AppKey;
   return "accueil";
 }
 

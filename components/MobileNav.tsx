@@ -3,13 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { APP_NAV, type AppKey } from "@/lib/apps";
-
-const APP_ROUTES = ["accueil", "flce", "musique", "activites"] as const;
+import { APP_NAV, APP_KEYS, type AppKey } from "@/lib/apps";
 
 function getAppKeyFromPath(pathname: string | null): AppKey {
   const seg = (pathname ?? "/").split("/")[1];
-  if (seg === "accueil" || seg === "flce" || seg === "musique" || seg === "activites") return seg;
+  if (APP_KEYS.includes(seg as AppKey)) return seg as AppKey;
   return "accueil";
 }
 
@@ -18,7 +16,7 @@ export default function MobileNav() {
   const [open, setOpen] = useState(false);
 
   const firstSeg = (pathname ?? "/").split("/")[1];
-  const isAppRoute = APP_ROUTES.includes(firstSeg as (typeof APP_ROUTES)[number]);
+  const isAppRoute = APP_KEYS.includes(firstSeg as AppKey);
 
   useEffect(() => {
     if (!open) return;
